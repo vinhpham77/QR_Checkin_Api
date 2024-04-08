@@ -8,6 +8,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.vinhpham.qrcheckinapi.common.Utils;
 import org.vinhpham.qrcheckinapi.dtos.Failure;
 import org.vinhpham.qrcheckinapi.dtos.HandleException;
 
@@ -22,7 +23,8 @@ public class CustomExceptionHandler {
 
     @ExceptionHandler({HandleException.class})
     public ResponseEntity<?> handleException(final HandleException ex) {
-        return Failure.response(ex.getMessage(), ex.getStatus());
+        String message = Utils.getMessage(messageSource, ex.getMessage(), ex.getArgs());
+        return Failure.response(message, ex.getStatus());
     }
 
     @ExceptionHandler({Throwable.class})

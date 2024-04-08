@@ -39,6 +39,10 @@ public class Device {
     @Column(name = "updated_at", nullable = false)
     private Date updatedAt;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "username", referencedColumnName = "username")
+    private User user;
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) createdAt = new Date();

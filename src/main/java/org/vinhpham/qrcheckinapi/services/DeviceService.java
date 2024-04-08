@@ -30,9 +30,4 @@ public class DeviceService {
         deviceRepository.deleteById(deviceId);
     }
 
-    @Transactional
-    public void deleteMany(Set<Device> devices) {
-        List<String> deviceIds = List.of(devices.stream().map(Device::getDeviceId).toArray(String[]::new));
-        deviceRepository.deleteAllById(deviceIds);
-    }
 }

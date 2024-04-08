@@ -42,9 +42,9 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestBody String refreshToken, @RequestParam(required = false, name = "apply") String apply, HttpServletRequest request) {
+    public ResponseEntity<?> logout(@RequestBody String refreshToken, HttpServletRequest request) {
         String deviceId = request.getHeader(Constants.KEY_DEVICE_ID);
-        authenticationService.logout(deviceId, apply, refreshToken);
+        authenticationService.logout(deviceId, refreshToken);
         return Success.noContent();
     }
 

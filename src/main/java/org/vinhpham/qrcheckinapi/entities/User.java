@@ -12,7 +12,6 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Objects;
-import java.util.Set;
 
 @Setter
 @Getter
@@ -42,19 +41,8 @@ public class User implements UserDetails {
     private Status status;
 
     @Basic
-    @Column(name = "first_name", length = 50)
-    private String firstName;
-
-    @Basic
-    @Column(name = "last_name", length = 50)
-    private String lastName;
-
-    @OneToMany
-    @JoinTable(
-            name = "user_devices",
-            joinColumns = @JoinColumn(name = "username"),
-            inverseJoinColumns = @JoinColumn(name = "device_id"))
-    private Set<Device> devices;
+    @Column(name = "full_name", length = 120)
+    private String fullName;
 
     @Basic
     @Column(name = "email", nullable = false, unique = true, length = 50)
@@ -133,8 +121,7 @@ public class User implements UserDetails {
         if (!Objects.equals(hashPassword, that.hashPassword)) return false;
         if (!Objects.equals(role, that.role)) return false;
         if (!Objects.equals(status, that.status)) return false;
-        if (!Objects.equals(firstName, that.firstName)) return false;
-        if (!Objects.equals(lastName, that.lastName)) return false;
+        if (!Objects.equals(fullName, that.fullName)) return false;
         if (!Objects.equals(email, that.email)) return false;
         if (!Objects.equals(sex, that.sex)) return false;
         if (!Objects.equals(birthdate, that.birthdate)) return false;
@@ -146,7 +133,7 @@ public class User implements UserDetails {
     @Override
     public int hashCode() {
         return Objects.hash(username, hashPassword, role, status,
-                firstName, lastName, email, sex, birthdate, createdAt, updatedAt);
+                fullName, email, sex, birthdate, createdAt, updatedAt);
     }
 
 }

@@ -38,9 +38,4 @@ public class RefreshTokenService {
         redisTemplate.delete(deviceId);
     }
 
-    @Transactional
-    public void deleteMany(Set<Device> devices) {
-        List<String> deviceIds = devices.stream().map(Device::getDeviceId).toList();
-        redisTemplate.delete(deviceIds);
-    }
 }

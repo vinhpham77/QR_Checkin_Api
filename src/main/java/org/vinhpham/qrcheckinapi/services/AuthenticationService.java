@@ -2,7 +2,6 @@ package org.vinhpham.qrcheckinapi.services;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -10,7 +9,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.vinhpham.qrcheckinapi.common.Utils;
 import org.vinhpham.qrcheckinapi.dtos.HandleException;
 import org.vinhpham.qrcheckinapi.dtos.JWT;
 import org.vinhpham.qrcheckinapi.dtos.Login;
@@ -19,9 +17,7 @@ import org.vinhpham.qrcheckinapi.entities.Device;
 import org.vinhpham.qrcheckinapi.entities.User;
 import org.vinhpham.qrcheckinapi.repositories.UserRepository;
 
-import java.util.Date;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.vinhpham.qrcheckinapi.common.Constants.IS_ACCESS_TOKEN;
 import static org.vinhpham.qrcheckinapi.common.Constants.IS_REFRESH_TOKEN;
@@ -36,7 +32,6 @@ public class AuthenticationService {
     private final RefreshTokenService refreshTokenService;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
-    private final MessageSource messageSource;
 
     @Transactional
     public User register(UserDto request) {
@@ -44,18 +39,15 @@ public class AuthenticationService {
         String email = request.getEmail();
 
         Optional<User> userOptional = userRepository.findById(username);
-        String message;
 
         if (userOptional.isPresent()) {
-            message = Utils.getMessage(messageSource, "error.username.exists");
-            throw HandleException.bad(message);
+            throw HandleException.bad("error.username.exists");
         }
 
         Optional<User> emailOptional = userRepository.findByEmail(email);
 
         if (emailOptional.isPresent()) {
-            message = Utils.getMessage(messageSource, "error.email.exists");
-            throw HandleException.bad(message);
+            throw HandleException.bad("error.email.exists");
         }
 
         String hashPassword = passwordEncoder.encode(request.getPassword());
@@ -79,37 +71,28 @@ public class AuthenticationService {
             authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, password));
         } catch (AuthenticationException e) {
-            String message = Utils.getMessage(messageSource, "error.username.password.invalid");
-            throw new HandleException(message, HttpStatus.UNAUTHORIZED);
+            throw new HandleException("error.username.password.invalid", HttpStatus.UNAUTHORIZED);
         }
 
         User user = (User) authentication.getPrincipal();
-        Set<Device> devices = user.getDevices();
-        Device device;
+        Device device = deviceService.findById(deviceId).orElse(null);
 
-        if (deviceId == null || deviceId.isBlank()) {
+        if (device == null) {
             device = Device.builder()
                     .deviceId(deviceId)
                     .deviceName(deviceName)
+                    .user(user)
                     .build();
         } else {
-            device = deviceService.findById(deviceId)
-                    .orElse(Device.builder()
-                            .deviceId(deviceId)
-                            .deviceName(deviceName)
-                            .build());
-
-            device.setDeviceName(deviceName);
-            device.setUpdatedAt(new Date());
+            User deviceUser = device.getUser();
+            if (deviceUser != null && !deviceUser.equals(user)) {
+                throw new HandleException("error.device.exists", HttpStatus.UNAUTHORIZED);
+            }
         }
 
-        devices.add(device);
-
-        if (!user.getDevices().equals(devices)) {
-            deviceService.save(device);
-            user.setDevices(devices);
-            userRepository.save(user);
-        }
+        device.setUser(user);
+        device.setUpdatedAt(null);
+        deviceService.save(device);
 
         return getJWTs(user, deviceId);
     }
@@ -119,23 +102,27 @@ public class AuthenticationService {
         Optional<String> jwt = refreshTokenService.get(deviceId);
 
         if (jwt.isEmpty() || !refreshToken.equals(jwt.get())) {
-            String message = Utils.getMessage(messageSource, "error.jwt.session.expired");
-            throw new HandleException(message, HttpStatus.PRECONDITION_FAILED);
+            throw new HandleException("error.jwt.session.expired", HttpStatus.PRECONDITION_FAILED);
         }
 
-        Optional<Device> device;
+        Device device;
 
         if (deviceId == null || deviceId.isBlank()) {
             throw new HandleException("error.auth.wrong", HttpStatus.NOT_ACCEPTABLE);
         } else {
-            device = deviceService.findById(deviceId);
-        }
-
-        if (device.isEmpty()) {
-            throw new HandleException("error.auth.wrong", HttpStatus.NOT_ACCEPTABLE);
+            device = deviceService.findById(deviceId).orElse(null);
+            if (device == null) {
+                throw new HandleException("error.auth.wrong", HttpStatus.NOT_ACCEPTABLE);
+            }
         }
 
         User user = getAuthUser(refreshToken);
+        User deviceUser = device.getUser();
+
+        if (deviceUser != null && !user.equals(deviceUser)) {
+            throw new HandleException("error.auth.wrong", HttpStatus.NOT_ACCEPTABLE);
+        }
+
         return getJWTs(user, deviceId);
     }
 
@@ -143,10 +130,7 @@ public class AuthenticationService {
         String username = jwtService.extractUserName(refreshToken, IS_REFRESH_TOKEN);
 
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> {
-                    String message = Utils.getMessage(messageSource, "error.auth.wrong");
-                    return new HandleException(message, HttpStatus.NOT_ACCEPTABLE);
-                });
+                .orElseThrow(() -> new HandleException("error.auth.wrong", HttpStatus.NOT_ACCEPTABLE));
     }
 
     private JWT getJWTs(User user, String deviceId) {
@@ -159,26 +143,19 @@ public class AuthenticationService {
     }
 
     @Transactional
-    public void logout(String deviceId, String apply, String refreshToken) {
+    public void logout(String deviceId, String refreshToken) {
         var user = getAuthUser(refreshToken);
 
-        String storedRefreshToken = refreshTokenService.get(deviceId)
-                .orElseThrow(() -> {
-                    String message = Utils.getMessage(messageSource, "error.jwt.session.expired");
-                    return new HandleException(message, HttpStatus.PRECONDITION_FAILED);
-                });
+        Optional<String> storedRefreshToken = refreshTokenService.get(deviceId);
 
-        if (!refreshToken.equals(storedRefreshToken)) {
-            String message = Utils.getMessage(messageSource, "error.jwt.session.expired");
-            throw new HandleException(message, HttpStatus.PRECONDITION_FAILED);
+        if (storedRefreshToken.isEmpty() || !refreshToken.equals(storedRefreshToken.get())) {
+            throw new HandleException("error.jwt.session.expired", HttpStatus.PRECONDITION_FAILED);
         }
 
-        if (apply != null && apply.equals("all")) {
-            Set<Device> devices = user.getDevices();
-            deviceService.deleteMany(devices);
-            refreshTokenService.deleteMany(devices);
-        } else {
-            deviceService.deleteById(deviceId);
+        Device device = deviceService.findById(deviceId).orElse(null);
+        User userDevice = device == null ? null : device.getUser();
+
+        if (user.equals(userDevice)) {
             refreshTokenService.delete(deviceId);
         }
     }
