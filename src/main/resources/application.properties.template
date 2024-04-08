@@ -1,0 +1,31 @@
+spring.application.name=QRCheckin
+server.servlet.context-path=/api
+server.port=8888
+
+spring.datasource.url=jdbc:mysql://localhost:3306/qr_checkin
+spring.datasource.username=username
+spring.datasource.password=password
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+
+spring.cache.type=redis
+spring.data.redis.host=localhost
+spring.data.redis.port=6379
+spring.data.redis.database=0
+
+spring.servlet.multipart.max-file-size=2MB
+spring.servlet.multipart.max-request-size=15MB
+
+spring.web.locale=vi_VN
+spring.messages.encoding=UTF-8
+spring.messages.basename=i18n.messages
+spring.messages.fallback-to-system-locale=true
+
+app.security.refresh-token.ttl=7
+# node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+token.secret.key=48a868a4042f634ac04a117f00a87202131dd7c46c4b32c4acb3edc5e15f4511
+# AccessToken expiration is 5 minutes
+token.expirationms=300000
+token.refresh.secret.key=TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCAuLi4
+# Refresh token expiration is 7 days
+token.refresh.expirationms=604800000
