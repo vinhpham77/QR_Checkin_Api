@@ -43,11 +43,14 @@ public class Device {
     @JoinColumn(name = "username", referencedColumnName = "username")
     private User user;
 
+    @Column(name = "refresh_token")
+    private String refreshToken;
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) createdAt = new Date();
         if (deviceId == null || deviceId.isBlank()) deviceId = generateDeviceId();
-        if (deviceName == null || deviceName.isBlank()) deviceName = "Anonymous";
+        if (deviceName == null || deviceName.isBlank()) deviceName = "Unknown";
         if (updatedAt == null) updatedAt = new Date();
     }
 

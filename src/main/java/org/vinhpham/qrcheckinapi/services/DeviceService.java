@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.vinhpham.qrcheckinapi.entities.Device;
+import org.vinhpham.qrcheckinapi.entities.User;
 import org.vinhpham.qrcheckinapi.repositories.DeviceRepository;
 
 import java.util.List;
@@ -18,6 +19,10 @@ public class DeviceService {
 
     public Optional<Device> findById(String deviceId) {
         return deviceRepository.findById(deviceId);
+    }
+
+    public Optional<Device> findByUser(User user) {
+        return deviceRepository.findByUser(user);
     }
 
     @Transactional
