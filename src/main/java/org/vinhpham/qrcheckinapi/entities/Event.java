@@ -3,16 +3,20 @@ package org.vinhpham.qrcheckinapi.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
-import org.hibernate.annotations.ColumnDefault;
+import lombok.*;
+import org.vinhpham.qrcheckinapi.utils.ConvertUtils;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.Set;
+import java.util.UUID;
 
 @Getter
 @Setter
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "events")
 public class Event {
 
@@ -67,22 +71,24 @@ public class Event {
     private Boolean isApproved;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "created_by", nullable = false)
-    private User createdBy;
+    @Column(name = "created_by", nullable = false)
+    private String createdBy;
 
     @Basic
     @NotNull
-    @ColumnDefault("CURRENT_TIMESTAMP")
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created_at", nullable = false)
     private Date createdAt;
 
-    @NotNull
     @Basic
+    @NotNull
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "updated_at", nullable = false)
     private Date updatedAt;
+
+    @NotNull
+    @Column(name = "updated_by", nullable = false)
+    private String updatedBy;
 
     @Basic
     @Temporal(TemporalType.TIMESTAMP)
@@ -102,4 +108,32 @@ public class Event {
     @Column(name = "checkout_qr_code", length = 64, unique = true)
     private String checkoutQrCode;
 
+    @ManyToMany
+    @JoinTable(
+            name = "event_categories",
+            joinColumns = @JoinColumn(name = "event_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id"))
+    private Set<Category> categories;
+
+    @Size(max = 255)
+    @Column(name = "background_url")
+    private String backgroundUrl;
+
+    @PrePersist
+    protected void onCreate() {
+        if (isRequired == null) isRequired = false;
+        if (isApproved == null) isApproved = false;
+        if (createdAt == null) createdAt = new Date();
+        if (updatedAt == null) updatedAt = new Date();
+        checkinQrCode = ConvertUtils.generateUUID();
+        setCheckoutQrCode();
+    }
+
+    public void setCheckoutQrCode() {
+        if (checkoutQrCode == null || checkoutQrCode.isBlank()) {
+            this.checkoutQrCode = ConvertUtils.generateUUID();
+        } else if (!ConvertUtils.isUUID(checkoutQrCode)) {
+            this.checkoutQrCode = null;
+        }
+    }
 }

@@ -1,6 +1,7 @@
 package org.vinhpham.qrcheckinapi.dtos;
 
 import org.springframework.context.MessageSource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.vinhpham.qrcheckinapi.common.Utils;
@@ -12,7 +13,7 @@ public class Success {
     }
 
     public static ResponseEntity<?> ok(Object data) {
-        return new ResponseEntity<>(data, HttpStatus.OK);
+        return ResponseEntity.ok(data);
     }
 
     public static ResponseEntity<?> response(Object data, HttpStatus status) {

@@ -106,13 +106,15 @@ public class AuthenticationService {
         String jwt = device.getRefreshToken();
 
         if (!refreshToken.equals(jwt)) {
-            throw new HandleException("error.jwt.session.expired", HttpStatus.PRECONDITION_FAILED);
+            throw new HandleException("error.jwt.session.expired", HttpStatus.NOT_ACCEPTABLE);
         }
 
         User user = getAuthUser(refreshToken);
+        String username = user.getUsername();
         User deviceUser = device.getUser();
+        String deviceUsername = deviceUser == null ? null : deviceUser.getUsername();
 
-        if (deviceUser != null && !user.equals(deviceUser)) {
+        if (deviceUser != null && !username.equals(deviceUsername)) {
             throw new HandleException("error.auth.wrong", HttpStatus.NOT_ACCEPTABLE);
         }
 

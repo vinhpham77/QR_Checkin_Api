@@ -61,8 +61,8 @@ public class SecurityConfig {
                 }))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/auth/register", "/auth/login", "/auth/logout", "/auth/refresh-token").permitAll()
+                        .requestMatchers("/images/{fileName}").permitAll()
                         .anyRequest().authenticated())
-
                 .authenticationProvider(authenticationProvider())
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(customAuthenticationEntryPoint))
                 .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);

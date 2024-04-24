@@ -19,6 +19,7 @@ import org.vinhpham.qrcheckinapi.services.JwtService;
 import org.vinhpham.qrcheckinapi.services.UserService;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -31,6 +32,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain)
             throws ServletException, IOException {
+
+        List<String> allowedResources = List.of("/auth/login", "/auth/register", "auth/logout", "/auth/refresh-token");
+        String requestURI = request.getRequestURI();
+        String contextPath = request.getContextPath();
+        allowedResources = allowedResources.stream().map(resource -> contextPath + resource).toList();
+        if (allowedResources.contains(requestURI)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         final String authHeader = request.getHeader("Authorization");
         String userName;

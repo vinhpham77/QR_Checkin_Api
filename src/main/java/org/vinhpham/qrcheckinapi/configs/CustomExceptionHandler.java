@@ -1,6 +1,8 @@
 package org.vinhpham.qrcheckinapi.configs;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.vinhpham.qrcheckinapi.common.Utils;
 import org.vinhpham.qrcheckinapi.dtos.Failure;
 import org.vinhpham.qrcheckinapi.dtos.HandleException;
+import org.vinhpham.qrcheckinapi.services.ImageService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +23,7 @@ import java.util.List;
 public class CustomExceptionHandler {
 
     private final MessageSource messageSource;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ImageService.class);
 
     @ExceptionHandler({HandleException.class})
     public ResponseEntity<?> handleException(final HandleException ex) {
@@ -27,9 +31,9 @@ public class CustomExceptionHandler {
         return Failure.response(message, ex.getStatus());
     }
 
-    @ExceptionHandler({Throwable.class})
-    public ResponseEntity<?> handleUnexpectedException(final Throwable throwable) {
-        throwable.printStackTrace();
+    @ExceptionHandler({Exception.class})
+    public ResponseEntity<?> handleUnexpectedException(final Exception throwable) {
+        LOGGER.error("Unexpected error", throwable);
         return Failure.internal(messageSource, "error.something.wrong");
     }
 
@@ -48,7 +52,7 @@ public class CustomExceptionHandler {
 
     @ExceptionHandler({HttpRequestMethodNotSupportedException.class})
     public ResponseEntity<?> handleNoHandlerFoundException(final HttpRequestMethodNotSupportedException ex) {
-        ex.printStackTrace();
+        LOGGER.error("Method not allowed", ex);
         return Failure.response(messageSource, "error.not.found", HttpStatus.NOT_FOUND);
     }
 }
