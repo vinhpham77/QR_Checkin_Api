@@ -9,7 +9,6 @@ import org.vinhpham.qrcheckinapi.utils.ConvertUtils;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Set;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -63,12 +62,16 @@ public class Event {
     private Double radius;
 
     @NotNull
-    @Column(name = "is_required", nullable = false)
-    private Boolean isRequired;
+    @Column(name = "regis_required", nullable = false)
+    private Boolean regisRequired;
 
     @NotNull
-    @Column(name = "is_approved", nullable = false)
-    private Boolean isApproved;
+    @Column(name = "approval_required", nullable = false)
+    private Boolean approvalRequired;
+
+    @NotNull
+    @Column(name = "capture_required", nullable = false)
+    private Boolean captureRequired;
 
     @NotNull
     @Column(name = "created_by", nullable = false)
@@ -121,11 +124,17 @@ public class Event {
 
     @PrePersist
     protected void onCreate() {
-        if (isRequired == null) isRequired = false;
-        if (isApproved == null) isApproved = false;
+        if (regisRequired == null) regisRequired = false;
+        if (approvalRequired == null) approvalRequired = false;
         if (createdAt == null) createdAt = new Date();
         if (updatedAt == null) updatedAt = new Date();
         checkinQrCode = ConvertUtils.generateUUID();
+        setCheckoutQrCode();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = new Date();
         setCheckoutQrCode();
     }
 

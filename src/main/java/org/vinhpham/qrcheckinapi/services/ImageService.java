@@ -158,4 +158,23 @@ public class ImageService {
             imageRepository.save(image);
         }
     }
+
+    @Transactional
+    public void deleteByUrl(String url) {
+        String imageId = url.substring(url.lastIndexOf("/") + 1, url.lastIndexOf("."));
+        String extension = url.substring(url.lastIndexOf(".") + 1);
+
+        Image image = imageRepository.findByIdAndExtensionAndStatus(ConvertUtils.toLong(imageId), extension, true);
+
+        if (image != null) {
+            imageRepository.delete(image);
+            Path pathImage = Paths.get(uploadPath + image.getId() + "." + image.getExtension());
+
+            try {
+                Files.delete(pathImage);
+            } catch (IOException e) {
+                LOGGER.error("Exception", e);
+            }
+        }
+    }
 }

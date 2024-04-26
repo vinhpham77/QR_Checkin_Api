@@ -46,9 +46,11 @@ public class EventDto implements Serializable {
     @Positive(message = "{event.radius.positive}")
     Double radius;
 
-    Boolean isRequired = false;
+    Boolean regisRequired = false;
 
-    Boolean isApproved = false;
+    Boolean approvalRequired = false;
+
+    Boolean captureRequired = false;
 
     String checkoutQrCode = null;
 
