@@ -1,12 +1,19 @@
 package org.vinhpham.qrcheckinapi.controllers;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.vinhpham.qrcheckinapi.common.Constants;
 import org.vinhpham.qrcheckinapi.dtos.EventDto;
+import org.vinhpham.qrcheckinapi.dtos.EventSearchCriteria;
+import org.vinhpham.qrcheckinapi.dtos.ItemCounter;
 import org.vinhpham.qrcheckinapi.dtos.Success;
 import org.vinhpham.qrcheckinapi.entities.Event;
 import org.vinhpham.qrcheckinapi.services.EventService;
+
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,6 +26,31 @@ public class EventController {
     public ResponseEntity<?> get(@PathVariable Long id) {
         Event event = eventService.get(id);
         return Success.ok(event);
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getEvents(@RequestParam(required = false, name = "fields") List<String> fields,
+                                       @RequestParam(required = false, name = "keyword") String keyword,
+                                       @RequestParam(required = false, name = "sortField", defaultValue = "") String sortField,
+                                       @RequestParam(required = false, name = "category", defaultValue = "") String category,
+                                       @RequestParam(required = false, name = "isAsc", defaultValue = "true") Boolean isAsc,
+                                       @RequestParam(required = false, name = "page") Integer page,
+                                       @RequestParam(required = false, name = "limit", defaultValue = "10") int limit,
+                                       HttpServletRequest request) {
+        EventSearchCriteria searchCriteria = new EventSearchCriteria();
+        searchCriteria.setKeyword(keyword);
+        searchCriteria.setFields(fields);
+        searchCriteria.setSortField(sortField);
+        searchCriteria.setCategory(category);
+        searchCriteria.setIsAsc(isAsc);
+        searchCriteria.setPage(page);
+        searchCriteria.setLimit(limit);
+
+        String latitude = request.getHeader(Constants.KEY_LATITUDE);
+        String longitude = request.getHeader(Constants.KEY_LONGITUDE);
+
+        ItemCounter<EventDto> events = eventService.get(searchCriteria, latitude, longitude);
+        return Success.ok(events);
     }
 
     @PostMapping

@@ -26,3 +26,6 @@ token.expirationms=300000
 token.refresh.secret.key=TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCAuLi4
 # Refresh token expiration is 7 days
 token.refresh.expirationms=604800000
+
+event.search.fields=name,description,location,createdBy
+event.sort.fields=createdAt,updatedAt,location

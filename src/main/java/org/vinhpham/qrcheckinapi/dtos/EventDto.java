@@ -1,8 +1,7 @@
 package org.vinhpham.qrcheckinapi.dtos;
 
 import jakarta.validation.constraints.*;
-import lombok.Builder;
-import lombok.Value;
+import lombok.*;
 import org.vinhpham.qrcheckinapi.entities.Category;
 
 import java.io.Serializable;
@@ -13,9 +12,12 @@ import java.util.Set;
 /**
  * DTO for {@link org.vinhpham.qrcheckinapi.entities.Event}
  */
-@Value
+@Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class EventDto implements Serializable {
+    Long id;
 
     @NotBlank(message = "{event.name.blank}")
     @Size(max = 100, message = "{event.name.size}")
@@ -27,7 +29,7 @@ public class EventDto implements Serializable {
     String description;
 
     @Negative(message = "{event.slots.negative}")
-    Long slots;
+    Integer slots;
 
     @NotNull(message = "{event.startAt.blank}")
     Date startAt;
@@ -56,6 +58,18 @@ public class EventDto implements Serializable {
 
     @Size(max = 255, message = "{event.backgroundUrl.size}")
     String backgroundUrl;
+
+    String checkinQrCode;
+
+    double distance;
+
+    String createdBy;
+
+    Date createdAt;
+
+    String updatedBy;
+
+    Date updatedAt;
 
     @AssertTrue(message = "{event.endAt.after.startAt}")
     private boolean isEndAtAfterStartAt() {
