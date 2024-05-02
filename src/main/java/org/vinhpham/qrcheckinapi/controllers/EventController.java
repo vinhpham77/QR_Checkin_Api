@@ -13,7 +13,6 @@ import org.vinhpham.qrcheckinapi.entities.Event;
 import org.vinhpham.qrcheckinapi.services.EventService;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -32,7 +31,7 @@ public class EventController {
     public ResponseEntity<?> getEvents(@RequestParam(required = false, name = "fields") List<String> fields,
                                        @RequestParam(required = false, name = "keyword") String keyword,
                                        @RequestParam(required = false, name = "sortField", defaultValue = "") String sortField,
-                                       @RequestParam(required = false, name = "category", defaultValue = "") String category,
+                                       @RequestParam(required = false, name = "categoryId", defaultValue = "") Integer category,
                                        @RequestParam(required = false, name = "isAsc", defaultValue = "true") Boolean isAsc,
                                        @RequestParam(required = false, name = "page") Integer page,
                                        @RequestParam(required = false, name = "limit", defaultValue = "10") int limit,
@@ -41,7 +40,7 @@ public class EventController {
         searchCriteria.setKeyword(keyword);
         searchCriteria.setFields(fields);
         searchCriteria.setSortField(sortField);
-        searchCriteria.setCategory(category);
+        searchCriteria.setCategoryId(category);
         searchCriteria.setIsAsc(isAsc);
         searchCriteria.setPage(page);
         searchCriteria.setLimit(limit);

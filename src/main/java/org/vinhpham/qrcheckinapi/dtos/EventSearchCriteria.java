@@ -9,7 +9,7 @@ public class EventSearchCriteria {
     private String keyword;
     private List<String> fields;
     private String sortField;
-    private String category;
+    private Integer categoryId;
     private Boolean isAsc = true;
     private Integer page;
     private Integer limit = 10;

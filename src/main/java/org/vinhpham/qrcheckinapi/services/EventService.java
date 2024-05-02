@@ -2,14 +2,10 @@ package org.vinhpham.qrcheckinapi.services;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.vinhpham.qrcheckinapi.dtos.EventDto;
 import org.vinhpham.qrcheckinapi.dtos.HandleException;
 import org.vinhpham.qrcheckinapi.dtos.ItemCounter;
-import org.vinhpham.qrcheckinapi.entities.Category;
 import org.vinhpham.qrcheckinapi.entities.Event;
 import org.vinhpham.qrcheckinapi.repositories.EventRepository;
 import org.vinhpham.qrcheckinapi.dtos.EventSearchCriteria;
@@ -91,20 +86,23 @@ public class EventService {
 
         var fields = searchCriteria.getFields();
         var keyword = searchCriteria.getKeyword();
-        var category = searchCriteria.getCategory();
+        var categoryId = searchCriteria.getCategoryId();
         var sortField = searchCriteria.getSortField();
         var direction = searchCriteria.getIsAsc() ? "ASC" : "DESC";
         var limit = searchCriteria.getLimit();
         var offset = searchCriteria.getPage() * limit;
 
-        if (category != null && !category.isBlank()) {
-            searchQueryString.append(" AND categories.name = :category");
+        if (categoryId != null) {
+            searchQueryString.append(" AND categories.id = :categoryId");
         }
 
-        for (String field : fields) {
-            searchQueryString.append(" AND events.").append(field).append(" LIKE :keyword");
+        if (keyword != null && !keyword.isBlank()) {
+            for (String field : fields) {
+                searchQueryString.append(" AND events.").append(field).append(" LIKE :keyword");
+            }
         }
 
+        searchQueryString.append(" GROUP BY events.id");
         searchQueryString.append(" ORDER BY :sortField :direction");
         String countString = searchQueryString.toString();
         searchQueryString.append(" LIMIT :limit OFFSET :offset");
@@ -112,7 +110,12 @@ public class EventService {
         Query searchQuery = entityManager.createNativeQuery(searchQueryString.toString());
         searchQuery.setParameter("latitude", latitude);
         searchQuery.setParameter("longitude", longitude);
-        searchQuery.setParameter("keyword", "%" + keyword + "%");
+        if (categoryId != null) {
+            searchQuery.setParameter("categoryId", categoryId);
+        }
+        if (keyword != null && !keyword.isBlank()) {
+            searchQuery.setParameter("keyword", "%" + keyword + "%");
+        }
         searchQuery.setParameter("sortField", sortField);
         searchQuery.setParameter("direction", direction);
         searchQuery.setParameter("limit", limit);
@@ -121,7 +124,12 @@ public class EventService {
         Query countQuery = entityManager.createNativeQuery(countString);
         countQuery.setParameter("latitude", latitude);
         countQuery.setParameter("longitude", longitude);
-        countQuery.setParameter("keyword", "%" + keyword + "%");
+        if (keyword != null && !keyword.isBlank()) {
+            countQuery.setParameter("keyword", "%" + keyword + "%");
+        }
+        if (categoryId != null) {
+            countQuery.setParameter("categoryId", categoryId);
+        }
         countQuery.setParameter("sortField", sortField);
         countQuery.setParameter("direction", direction);
 
@@ -172,7 +180,7 @@ public class EventService {
                 .createdBy(requester)
                 .updatedBy(requester)
                 .backgroundUrl(eventDto.getBackgroundUrl())
-                .slots(Long.valueOf(eventDto.getSlots()))
+                .slots(eventDto.getSlots() == null ? null : Long.valueOf(eventDto.getSlots()))
                 .location(eventDto.getLocation())
                 .latitude(eventDto.getLatitude())
                 .longitude(eventDto.getLongitude())
@@ -207,7 +215,7 @@ public class EventService {
         event.setCategories(eventDto.getCategories());
         event.setUpdatedBy(SecurityContextHolder.getContext().getAuthentication().getName());
         event.setBackgroundUrl(eventDto.getBackgroundUrl());
-        event.setSlots(Long.valueOf(eventDto.getSlots()));
+        event.setSlots(eventDto.getSlots() == null ? null : Long.valueOf(eventDto.getSlots()));
         event.setLocation(eventDto.getLocation());
         event.setLatitude(eventDto.getLatitude());
         event.setLongitude(eventDto.getLongitude());

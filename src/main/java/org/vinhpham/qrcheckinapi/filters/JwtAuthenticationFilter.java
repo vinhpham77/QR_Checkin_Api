@@ -33,7 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
-        List<String> allowedResources = List.of("/auth/login", "/auth/register", "auth/logout", "/auth/refresh-token");
+        List<String> allowedResources = List.of("/auth/login", "/auth/register", "auth/logout", "/auth/refresh-token", "/images/");
         String requestURI = request.getRequestURI();
         String contextPath = request.getContextPath();
         allowedResources = allowedResources.stream().map(resource -> contextPath + resource).toList();
