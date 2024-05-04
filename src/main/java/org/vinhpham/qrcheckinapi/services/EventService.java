@@ -97,9 +97,11 @@ public class EventService {
         }
 
         if (keyword != null && !keyword.isBlank()) {
+            searchQueryString.append(" AND (FALSE");
             for (String field : fields) {
-                searchQueryString.append(" AND events.").append(field).append(" LIKE :keyword");
+                searchQueryString.append(" OR events.").append(field).append(" LIKE :keyword");
             }
+            searchQueryString.append(")");
         }
 
         searchQueryString.append(" GROUP BY events.id");
