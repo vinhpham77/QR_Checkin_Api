@@ -7,6 +7,7 @@ import org.vinhpham.qrcheckinapi.entities.Category;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -48,6 +49,8 @@ public class EventDto implements Serializable {
     @Positive(message = "{event.radius.positive}")
     Double radius;
 
+    Boolean isTicketSeller = false;
+
     Boolean regisRequired = false;
 
     Boolean approvalRequired = false;
@@ -70,6 +73,8 @@ public class EventDto implements Serializable {
     String updatedBy;
 
     Date updatedAt;
+
+    List<TicketTypeDto> ticketTypes;
 
     @AssertTrue(message = "{event.endAt.after.startAt}")
     private boolean isEndAtAfterStartAt() {

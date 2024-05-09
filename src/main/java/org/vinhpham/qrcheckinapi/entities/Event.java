@@ -62,6 +62,10 @@ public class Event {
     private Double radius;
 
     @NotNull
+    @Column(name = "is_ticket_seller", nullable = false)
+    private Boolean isTicketSeller;
+
+    @NotNull
     @Column(name = "regis_required", nullable = false)
     private Boolean regisRequired;
 

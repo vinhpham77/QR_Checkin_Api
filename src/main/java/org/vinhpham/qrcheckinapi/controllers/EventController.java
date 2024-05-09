@@ -5,10 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.vinhpham.qrcheckinapi.common.Constants;
-import org.vinhpham.qrcheckinapi.dtos.EventDto;
-import org.vinhpham.qrcheckinapi.dtos.EventSearchCriteria;
-import org.vinhpham.qrcheckinapi.dtos.ItemCounter;
-import org.vinhpham.qrcheckinapi.dtos.Success;
+import org.vinhpham.qrcheckinapi.dtos.*;
 import org.vinhpham.qrcheckinapi.entities.Event;
 import org.vinhpham.qrcheckinapi.services.EventService;
 
@@ -36,6 +33,7 @@ public class EventController {
                                        @RequestParam(required = false, name = "page") Integer page,
                                        @RequestParam(required = false, name = "limit", defaultValue = "10") int limit,
                                        HttpServletRequest request) {
+
         EventSearchCriteria searchCriteria = new EventSearchCriteria();
         searchCriteria.setKeyword(keyword);
         searchCriteria.setFields(fields);
@@ -63,4 +61,11 @@ public class EventController {
         Event updatedEvent = eventService.update(id, event);
         return Success.ok(updatedEvent);
     }
+
+    @PostMapping("/generate-qr")
+    public ResponseEntity<?> generateQrCode(@RequestBody GenerateQrRequest request) {
+        String jwt = eventService.generateQrCode(request);
+        return Success.ok(jwt);
+    }
+
 }

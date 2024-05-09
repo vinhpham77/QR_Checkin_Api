@@ -22,8 +22,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
-import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -85,47 +83,6 @@ public class ImageService {
         } catch (IOException e) {
             throw new HandleException("error.something.wrong", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-    }
-
-    public void saveImagesInContent(String content) {
-        List<Integer> ids = regexIdInContext(content);
-        System.out.println(ids.size());
-        if (ids.isEmpty())
-            return;
-
-        try {
-            List<Image> images = imageRepository.findByIdIn(ids);
-            images.forEach(image -> image.setStatus(true));
-            imageRepository.saveAll(images);
-        } catch (Exception e) {
-            throw HandleException.bad("error.image.not-exist");
-        }
-    }
-
-    public void removeImagesInContent(String content) {
-        List<Integer> ids = regexIdInContext(content);
-        System.out.println(ids.size());
-        if (ids.isEmpty())
-            return;
-        try {
-            List<Image> images = imageRepository.findByIdIn(ids);
-            images.forEach(image -> image.setStatus(false));
-            imageRepository.saveAll(images);
-        } catch (Exception e) {
-            throw HandleException.bad("error.image.not-exist");
-        }
-    }
-
-    public List<Integer> regexIdInContext(String content) {
-        String allowedExtensions = String.join("|", this.allowedExtensions);
-        String regex = "\\(http://localhost:8888/api/images/(.*?)\\.(" + allowedExtensions + ")\\)";
-
-        return Pattern.compile(regex)
-                .matcher(content)
-                .results()
-                .map(result -> ConvertUtils.toInteger(result.group(1)))
-                .filter(Objects::nonNull)
-                .toList();
     }
 
     @Scheduled(fixedRate = 24 * 60 * 60 * 1000)

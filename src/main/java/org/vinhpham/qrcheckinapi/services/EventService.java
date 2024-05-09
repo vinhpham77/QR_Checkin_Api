@@ -5,20 +5,19 @@ import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.vinhpham.qrcheckinapi.dtos.EventDto;
-import org.vinhpham.qrcheckinapi.dtos.HandleException;
-import org.vinhpham.qrcheckinapi.dtos.ItemCounter;
+import org.vinhpham.qrcheckinapi.dtos.*;
 import org.vinhpham.qrcheckinapi.entities.Event;
+import org.vinhpham.qrcheckinapi.entities.TicketType;
 import org.vinhpham.qrcheckinapi.repositories.EventRepository;
-import org.vinhpham.qrcheckinapi.dtos.EventSearchCriteria;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +26,8 @@ public class EventService {
     private final EventRepository eventRepository;
     private final ImageService imageService;
     private final EntityManager entityManager;
+    private final TicketTypeService ticketTypeService;
+    private final JwtService jwtService;
 
     @Value("#{'${event.search.fields}'.split(',')}")
     private List<String> searchFields;
@@ -41,9 +42,7 @@ public class EventService {
     }
 
     public ItemCounter<EventDto> get(EventSearchCriteria searchCriteria, String latitude, String longitude) {
-        Page<Event> eventPage;
         String sortField = searchCriteria.getSortField();
-        Sort.Direction direction = searchCriteria.getIsAsc() ? Sort.Direction.ASC : Sort.Direction.DESC;
         Integer page = searchCriteria.getPage();
         List<String> fields = searchCriteria.getFields();
         Integer limit = searchCriteria.getLimit();
@@ -66,7 +65,6 @@ public class EventService {
             searchCriteria.setLimit(10);
         }
 
-        // TODO: Fields default by name, description, location, category, createdBy or searchCriteria.fields
         if (fields != null && new HashSet<>(searchFields).containsAll(fields)) {
             searchCriteria.setFields(fields);
         } else {
@@ -78,11 +76,11 @@ public class EventService {
 
     private ItemCounter<EventDto> findByFields(EventSearchCriteria searchCriteria, String latitude, String longitude) {
         StringBuilder searchQueryString = new StringBuilder("SELECT events.*, " +
-                                                      "ST_Distance_Sphere(point(longitude, latitude), point(:longitude, :latitude)) " +
-                                                      "as distance " +
-                                                      "FROM events LEFT JOIN event_categories ON events.id = event_categories.event_id " +
-                                                      "LEFT JOIN categories ON event_categories.category_id = categories.id " +
-                                                      "WHERE TRUE");
+                "ST_Distance_Sphere(point(longitude, latitude), point(:longitude, :latitude)) " +
+                "as distance " +
+                "FROM events LEFT JOIN event_categories ON events.id = event_categories.event_id " +
+                "LEFT JOIN categories ON event_categories.category_id = categories.id " +
+                "WHERE TRUE");
 
         var fields = searchCriteria.getFields();
         var keyword = searchCriteria.getKeyword();
@@ -105,7 +103,13 @@ public class EventService {
         }
 
         searchQueryString.append(" GROUP BY events.id");
-        searchQueryString.append(" ORDER BY :sortField :direction");
+        if (sortField != null && !sortField.isBlank()) {
+            if (sortField.equals("distance")) {
+                searchQueryString.append(" ORDER BY distance ").append(direction);
+            } else {
+                searchQueryString.append(" ORDER BY events.").append(sortField).append(" ").append(direction);
+            }
+        }
         String countString = searchQueryString.toString();
         searchQueryString.append(" LIMIT :limit OFFSET :offset");
 
@@ -118,8 +122,6 @@ public class EventService {
         if (keyword != null && !keyword.isBlank()) {
             searchQuery.setParameter("keyword", "%" + keyword + "%");
         }
-        searchQuery.setParameter("sortField", sortField);
-        searchQuery.setParameter("direction", direction);
         searchQuery.setParameter("limit", limit);
         searchQuery.setParameter("offset", offset);
 
@@ -132,8 +134,6 @@ public class EventService {
         if (categoryId != null) {
             countQuery.setParameter("categoryId", categoryId);
         }
-        countQuery.setParameter("sortField", sortField);
-        countQuery.setParameter("direction", direction);
 
         List<Object[]> results = searchQuery.getResultList();
         List<EventDto> events = new ArrayList<>();
@@ -160,7 +160,8 @@ public class EventService {
             eventDto.setCreatedBy((String) result[17]);
             eventDto.setUpdatedAt((Date) result[18]);
             eventDto.setUpdatedBy((String) result[19]);
-            eventDto.setDistance((Double) result[22]);
+            eventDto.setIsTicketSeller((Boolean) result[22]);
+            eventDto.setDistance((Double) result[23]);
             events.add(eventDto);
         }
 
@@ -173,6 +174,15 @@ public class EventService {
     public Event create(EventDto eventDto) {
         String requester = SecurityContextHolder.getContext().getAuthentication().getName();
 
+        List<TicketTypeDto> ticketTypes = eventDto.getTicketTypes();
+        if (ticketTypes != null) {
+            for (TicketTypeDto ticketType : ticketTypes) {
+                if (ticketType.getPrice() == null || ticketType.getQuantity() == null) {
+                    throw new HandleException("error.ticket.type.invalid", HttpStatus.BAD_REQUEST, ticketType.getName());
+                }
+            }
+        }
+
         Event event = Event.builder()
                 .name(eventDto.getName())
                 .description(eventDto.getDescription())
@@ -181,6 +191,7 @@ public class EventService {
                 .categories(eventDto.getCategories())
                 .createdBy(requester)
                 .updatedBy(requester)
+                .isTicketSeller(eventDto.getIsTicketSeller())
                 .backgroundUrl(eventDto.getBackgroundUrl())
                 .slots(eventDto.getSlots() == null ? null : Long.valueOf(eventDto.getSlots()))
                 .location(eventDto.getLocation())
@@ -199,9 +210,14 @@ public class EventService {
             imageService.saveByUrl(backgroundUrl);
         }
 
-        return eventRepository.save(event);
+        Event newEvent = eventRepository.save(event);
+
+        saveTicketType(requester, newEvent, ticketTypes);
+
+        return newEvent;
     }
 
+    @Transactional
     public Event update(Long id, EventDto eventDto) {
         Event event = get(id);
 
@@ -234,6 +250,81 @@ public class EventService {
             event.setBackgroundUrl(backgroundUrl);
         }
 
-        return eventRepository.save(event);
+        Event updatedEvent = eventRepository.save(event);
+
+        List<TicketTypeDto> ticketTypes = eventDto.getTicketTypes();
+        saveTicketType(requester, updatedEvent, ticketTypes);
+
+        return updatedEvent;
+    }
+
+    private void saveTicketType(String requester, Event updatedEvent, List<TicketTypeDto> ticketTypes) {
+        if (ticketTypes != null) {
+            List<TicketType> ticketTypeList = new ArrayList<>();
+            for (TicketTypeDto ticketType : ticketTypes) {
+                var id = ticketType.getId();
+
+                if (id == 0) {
+                    id = null;
+                }
+
+                TicketType newTicketType = TicketType.builder()
+                        .id(id)
+                        .name(ticketType.getName())
+                        .description(ticketType.getDescription())
+                        .quantity(ticketType.getQuantity())
+                        .price(ticketType.getPrice())
+                        .eventId(updatedEvent.getId())
+                        .createdBy(requester)
+                        .updatedBy(requester)
+                        .build();
+                ticketTypeList.add(newTicketType);
+            }
+
+            var deletedTicketTypes = ticketTypeService.getByEventId(updatedEvent.getId());
+            deletedTicketTypes.forEach(ticketType -> {
+                if (!ticketTypeList.contains(ticketType)) {
+                    ticketTypeService.delete(ticketType);
+                }
+            });
+
+            ticketTypeService.saveAll(ticketTypeList);
+        }
+    }
+
+    @Transactional
+    public void save(Event event) {
+        eventRepository.save(event);
+    }
+
+    public String generateQrCode(GenerateQrRequest request) {
+        var eventId = request.getEventId();
+        var isCheckin = request.isCheckIn();
+        var username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        var event = get(eventId);
+
+        if (event == null) {
+            throw new HandleException("error.event.not.found", HttpStatus.NOT_FOUND);
+        }
+
+        if (!username.equals(event.getCreatedBy())) {
+            throw new HandleException("error.event.not.authorized", HttpStatus.FORBIDDEN);
+        }
+
+        var now = new Date();
+        if (isCheckin && event.getStartAt().before(now)) {
+            throw new HandleException("error.event.not.started", HttpStatus.BAD_REQUEST);
+        }
+
+        if (isCheckin && event.getEndAt().before(now)) {
+            throw new HandleException("error.event.ended", HttpStatus.BAD_REQUEST);
+        }
+
+        if (isCheckin) {
+            return jwtService.generateQrToken(eventId, event.getCheckinQrCode());
+        } else {
+            return jwtService.generateQrToken(eventId, event.getCheckoutQrCode());
+        }
     }
 }

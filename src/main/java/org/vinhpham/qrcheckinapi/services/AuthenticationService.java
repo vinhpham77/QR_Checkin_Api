@@ -17,6 +17,7 @@ import org.vinhpham.qrcheckinapi.entities.Device;
 import org.vinhpham.qrcheckinapi.entities.User;
 import org.vinhpham.qrcheckinapi.repositories.UserRepository;
 
+import java.util.Date;
 import java.util.Optional;
 
 import static org.vinhpham.qrcheckinapi.common.Constants.IS_ACCESS_TOKEN;
@@ -80,6 +81,8 @@ public class AuthenticationService {
             device = Device.builder()
                     .deviceId(deviceId)
                     .deviceName(deviceName)
+                    .createdAt(new Date())
+                    .updatedAt(new Date())
                     .user(user)
                     .build();
         } else {

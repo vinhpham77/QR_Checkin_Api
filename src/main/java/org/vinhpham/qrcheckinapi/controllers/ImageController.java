@@ -33,16 +33,4 @@ public class ImageController {
 
         return Success.ok(resource);
     }
-
-    @PostMapping("/by-content")
-    public ResponseEntity<?> saveByContent(@RequestBody String content) {
-        imageService.saveImagesInContent(content);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @DeleteMapping("/by-content")
-    public ResponseEntity<?> deleteByContent(@RequestBody String content) {
-        imageService.removeImagesInContent(content);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
 }
