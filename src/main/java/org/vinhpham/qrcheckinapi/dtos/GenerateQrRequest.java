@@ -5,5 +5,5 @@ import lombok.Data;
 @Data
 public class GenerateQrRequest {
     private Long eventId;
-    private boolean isCheckIn;
+    private Boolean isCheckIn;
 }

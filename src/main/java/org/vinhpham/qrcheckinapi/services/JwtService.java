@@ -62,8 +62,8 @@ public class JwtService {
     }
 
     public String generateQrToken(Long eventId, String eventSecretKey) {
-        String combinedKey = jwtSecretKey + eventSecretKey;
-        byte[] keyBytes = Decoders.BASE64.decode(combinedKey);
+        byte[] keyBytes = (jwtSecretKey + eventSecretKey).getBytes();
+
         var qrSigningKey = Keys.hmacShaKeyFor(keyBytes);
         var claims = new HashMap<String, Object>();
         claims.put("eventId", eventId);
@@ -72,7 +72,6 @@ public class JwtService {
         return Jwts
                 .builder()
                 .setClaims(claims)
-                .setSubject(eventSecretKey)
                 .signWith(qrSigningKey, SignatureAlgorithm.HS256)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + thirtySecondsInMs))

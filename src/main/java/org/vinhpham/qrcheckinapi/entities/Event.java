@@ -144,9 +144,9 @@ public class Event {
 
     public void setCheckoutQrCode() {
         if (checkoutQrCode == null || checkoutQrCode.isBlank()) {
-            this.checkoutQrCode = ConvertUtils.generateUUID();
-        } else if (!ConvertUtils.isUUID(checkoutQrCode)) {
             this.checkoutQrCode = null;
+        } else if (!ConvertUtils.isUUID(checkoutQrCode)) {
+            this.checkoutQrCode = ConvertUtils.generateUUID();
         }
     }
 }

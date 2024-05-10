@@ -299,7 +299,7 @@ public class EventService {
 
     public String generateQrCode(GenerateQrRequest request) {
         var eventId = request.getEventId();
-        var isCheckin = request.isCheckIn();
+        var isCheckin = request.getIsCheckIn();
         var username = SecurityContextHolder.getContext().getAuthentication().getName();
 
         var event = get(eventId);

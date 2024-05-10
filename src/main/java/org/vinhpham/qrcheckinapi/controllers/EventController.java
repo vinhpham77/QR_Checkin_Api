@@ -67,5 +67,4 @@ public class EventController {
         String jwt = eventService.generateQrCode(request);
         return Success.ok(jwt);
     }
-
 }
