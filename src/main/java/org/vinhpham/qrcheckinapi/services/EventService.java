@@ -308,6 +308,10 @@ public class EventService {
             throw new HandleException("error.event.not.found", HttpStatus.NOT_FOUND);
         }
 
+        if (event.getIsTicketSeller()) {
+            throw new HandleException("error.event.not.attendance", HttpStatus.BAD_REQUEST);
+        }
+
         if (!username.equals(event.getCreatedBy())) {
             throw new HandleException("error.event.not.authorized", HttpStatus.FORBIDDEN);
         }

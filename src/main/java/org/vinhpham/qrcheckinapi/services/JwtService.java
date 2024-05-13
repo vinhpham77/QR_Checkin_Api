@@ -8,8 +8,10 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.vinhpham.qrcheckinapi.dtos.HandleException;
 import org.vinhpham.qrcheckinapi.entities.User;
 
 import java.security.Key;
@@ -76,6 +78,30 @@ public class JwtService {
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + thirtySecondsInMs))
                 .compact();
+    }
+
+    public void checkValidQrToken(String qrToken, Long eventId, String eventSecretKey) {
+        byte[] keyBytes = (jwtSecretKey + eventSecretKey).getBytes();
+        var qrSigningKey = Keys.hmacShaKeyFor(keyBytes);
+
+        try {
+            var claims = Jwts
+                    .parserBuilder()
+                    .setSigningKey(qrSigningKey)
+                    .build()
+                    .parseClaimsJws(qrToken)
+                    .getBody();
+
+            if (claims.get("eventId") != eventId) {
+                throw new HandleException("error.qr.token.not.match", HttpStatus.BAD_REQUEST);
+            }
+
+            if (claims.getExpiration().before(new Date())) {
+                throw new HandleException("error.qr.token.expired", HttpStatus.BAD_REQUEST);
+            }
+        } catch (Exception e) {
+            throw new HandleException("error.qr.token.invalid", HttpStatus.BAD_REQUEST);
+        }
     }
 
     public Map<String, Object> setBasicClaims(User user) {

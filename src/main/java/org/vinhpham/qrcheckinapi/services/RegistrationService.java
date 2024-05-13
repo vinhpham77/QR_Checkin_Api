@@ -2,14 +2,20 @@ package org.vinhpham.qrcheckinapi.services;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.vinhpham.qrcheckinapi.dtos.HandleException;
+import org.vinhpham.qrcheckinapi.dtos.ItemCounter;
+import org.vinhpham.qrcheckinapi.dtos.RegistrationDetail;
 import org.vinhpham.qrcheckinapi.entities.Registration;
 import org.vinhpham.qrcheckinapi.repositories.RegistrationRepository;
 
 import java.util.Date;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -39,11 +45,13 @@ public class RegistrationService {
 
         var slots = event.getSlots();
 
-        if (slots != null && slots <= 0) {
-            throw new HandleException("error.event.full", HttpStatus.BAD_REQUEST);
-        } else if (slots != null) {
-            event.setSlots(slots - 1);
-            eventService.save(event);
+        if (event.getRegisRequired()) {
+            if (slots != null && slots <= 0) {
+                throw new HandleException("error.event.full", HttpStatus.BAD_REQUEST);
+            } else if (slots != null) {
+                event.setSlots(slots - 1);
+                eventService.save(event);
+            }
         }
 
         var approval = event.getApprovalRequired();
@@ -55,5 +63,13 @@ public class RegistrationService {
                 .build();
 
         registrationRepository.save(registration);
+    }
+
+    public Registration findByEventIdAndUsername(Long eventId, String username) {
+        return registrationRepository.findByEventIdAndUsername(eventId, username).orElse(null);
+    }
+
+    public List<Registration> findByUsername(String username, Pageable pageable) {
+        return registrationRepository.findByUsername(username, pageable);
     }
 }
