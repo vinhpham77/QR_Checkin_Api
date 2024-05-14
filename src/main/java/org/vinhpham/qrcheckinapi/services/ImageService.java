@@ -117,10 +117,36 @@ public class ImageService {
     }
 
     @Transactional
+    public void saveByName(String imageName) {
+        String imageId = imageName.substring(0, imageName.lastIndexOf("."));
+        String extension = imageName.substring(imageName.lastIndexOf(".") + 1);
+
+        Image image = imageRepository.findByIdAndExtensionAndStatus(ConvertUtils.toLong(imageId), extension, false);
+
+        if (image != null) {
+            image.setStatus(true);
+            imageRepository.save(image);
+        }
+    }
+
+    @Transactional
     public void deleteByUrl(String url) {
         String imageId = url.substring(url.lastIndexOf("/") + 1, url.lastIndexOf("."));
         String extension = url.substring(url.lastIndexOf(".") + 1);
 
+        deleteImageByName(imageId, extension);
+    }
+
+    @Transactional
+    public void deleteByName(String imageName) {
+        String imageId = imageName.substring(0, imageName.lastIndexOf("."));
+        String extension = imageName.substring(imageName.lastIndexOf(".") + 1);
+
+        deleteImageByName(imageId, extension);
+
+    }
+
+    private void deleteImageByName(String imageId, String extension) {
         Image image = imageRepository.findByIdAndExtensionAndStatus(ConvertUtils.toLong(imageId), extension, true);
 
         if (image != null) {

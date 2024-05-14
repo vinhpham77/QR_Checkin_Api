@@ -1,12 +1,11 @@
 package org.vinhpham.qrcheckinapi.controllers;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.vinhpham.qrcheckinapi.dtos.AttendanceRequest;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.vinhpham.qrcheckinapi.common.Constants;
 import org.vinhpham.qrcheckinapi.dtos.Success;
 import org.vinhpham.qrcheckinapi.services.AttendanceService;
 
@@ -16,9 +15,18 @@ import org.vinhpham.qrcheckinapi.services.AttendanceService;
 public class AttendanceController {
     private final AttendanceService attendanceService;
 
-    @PostMapping("/checkin")
-    public ResponseEntity<?> checkIn(@RequestBody AttendanceRequest request) {
-        attendanceService.checkIn(request.getCode(), request.getEventId());
+    @PostMapping("/{id}/check-in")
+    public ResponseEntity<?> checkIn(
+            @PathVariable Long id,
+            @RequestParam("qrImage") MultipartFile qrImage,
+            @RequestParam(value = "portraitImage", required = false) MultipartFile portraitImage,
+            @RequestParam("code") String code,
+            HttpServletRequest request) {
+
+        String latitude = request.getHeader(Constants.KEY_LATITUDE);
+        String longitude = request.getHeader(Constants.KEY_LONGITUDE);
+
+        attendanceService.checkIn(id, qrImage, portraitImage, code, latitude, longitude);
         return Success.ok(null);
     }
 }

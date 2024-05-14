@@ -317,7 +317,7 @@ public class EventService {
         }
 
         var now = new Date();
-        if (isCheckin && event.getStartAt().before(now)) {
+        if (isCheckin && event.getStartAt().after(now)) {
             throw new HandleException("error.event.not.started", HttpStatus.BAD_REQUEST);
         }
 

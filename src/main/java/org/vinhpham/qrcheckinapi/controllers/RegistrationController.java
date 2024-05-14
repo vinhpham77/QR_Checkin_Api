@@ -2,6 +2,7 @@ package org.vinhpham.qrcheckinapi.controllers;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.vinhpham.qrcheckinapi.dtos.EventDto;
 import org.vinhpham.qrcheckinapi.dtos.RegistrationRequest;
 import org.vinhpham.qrcheckinapi.dtos.Success;
 import org.vinhpham.qrcheckinapi.services.AttendanceService;
@@ -19,6 +20,12 @@ public class RegistrationController {
     public ResponseEntity<?> register(@RequestBody RegistrationRequest registrationRequest) {
         registrationService.register(registrationRequest.getEventId());
         return Success.ok(null);
+    }
+
+    @GetMapping("/{id}/check")
+    public ResponseEntity<?> checkRegistration(@PathVariable Long id) {
+        EventDto event = registrationService.checkRegistration(id);
+        return Success.ok(event);
     }
 
     @GetMapping

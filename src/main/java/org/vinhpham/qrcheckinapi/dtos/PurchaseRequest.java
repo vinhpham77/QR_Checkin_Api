@@ -1,13 +1,10 @@
 package org.vinhpham.qrcheckinapi.dtos;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Setter
+@Getter
 public class PurchaseRequest {
     private Long ticketTypeId;
-
-    public Long getTicketTypeId() {
-        return ticketTypeId;
-    }
-
-    public void setTicketTypeId(Long ticketTypeId) {
-        this.ticketTypeId = ticketTypeId;
-    }
 }

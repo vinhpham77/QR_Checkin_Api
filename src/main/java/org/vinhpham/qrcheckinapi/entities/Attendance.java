@@ -19,9 +19,14 @@ public class Attendance {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "registrationId")
-    private Registration registration;
+    @Column(name = "registration_id")
+    private Long registrationId;
+
+    @Column(name = "event_id")
+    private Long eventId;
+
+    @Column(name = "username")
+    private String username;
 
     @Basic
     @Temporal(TemporalType.TIMESTAMP)

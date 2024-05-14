@@ -20,7 +20,7 @@ public class TicketController {
         return Success.ok(null);
     }
 
-    @PutMapping("/checkin")
+    @PutMapping("/check-in")
     public ResponseEntity<?> checkIn(@RequestBody TicketCheckinRequest request) {
         ticketService.checkIn(request.getCode(), request.getEventId());
         return Success.ok(null);

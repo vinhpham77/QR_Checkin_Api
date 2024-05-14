@@ -76,6 +76,8 @@ public class EventDto implements Serializable {
 
     List<TicketTypeDto> ticketTypes;
 
+    Boolean isRegistered;
+
     @AssertTrue(message = "{event.endAt.after.startAt}")
     private boolean isEndAtAfterStartAt() {
         if (startAt == null || endAt == null) {

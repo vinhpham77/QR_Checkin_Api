@@ -1,9 +1,11 @@
 package org.vinhpham.qrcheckinapi.dtos;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class TicketCheckinRequest {
-    String code;
-    Long eventId;
+    private String code;
+    private Long eventId;
 }

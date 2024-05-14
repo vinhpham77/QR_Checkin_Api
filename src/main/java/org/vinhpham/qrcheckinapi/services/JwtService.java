@@ -1,6 +1,7 @@
 package org.vinhpham.qrcheckinapi.services;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
@@ -80,7 +81,7 @@ public class JwtService {
                 .compact();
     }
 
-    public void checkValidQrToken(String qrToken, Long eventId, String eventSecretKey) {
+    public void verifyQrToken(String qrToken, Long eventId, String eventSecretKey) {
         byte[] keyBytes = (jwtSecretKey + eventSecretKey).getBytes();
         var qrSigningKey = Keys.hmacShaKeyFor(keyBytes);
 
@@ -92,13 +93,17 @@ public class JwtService {
                     .parseClaimsJws(qrToken)
                     .getBody();
 
-            if (claims.get("eventId") != eventId) {
+            Integer qrEventId = claims.get("eventId", Integer.class);
+
+            if (qrEventId != eventId.intValue()) {
                 throw new HandleException("error.qr.token.not.match", HttpStatus.BAD_REQUEST);
             }
 
             if (claims.getExpiration().before(new Date())) {
                 throw new HandleException("error.qr.token.expired", HttpStatus.BAD_REQUEST);
             }
+        } catch (ExpiredJwtException ex) {
+            throw new HandleException("error.qr.token.expired", HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             throw new HandleException("error.qr.token.invalid", HttpStatus.BAD_REQUEST);
         }

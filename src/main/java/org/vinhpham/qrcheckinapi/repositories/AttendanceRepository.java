@@ -5,4 +5,6 @@ import org.vinhpham.qrcheckinapi.entities.Attendance;
 
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     Attendance findByRegistrationId(Long registrationId);
+
+    Attendance findByUsernameAndEventId(String username, Long id);
 }
