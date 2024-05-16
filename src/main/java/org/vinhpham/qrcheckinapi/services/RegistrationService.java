@@ -102,7 +102,7 @@ public class RegistrationService {
                 .regisRequired(event.getRegisRequired())
                 .approvalRequired(event.getApprovalRequired())
                 .captureRequired(event.getCaptureRequired())
-                .backgroundUrl(event.getBackgroundUrl())
+                .backgroundImage(event.getBackgroundImage())
                 .build();
 
     }

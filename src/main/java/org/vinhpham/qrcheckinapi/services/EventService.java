@@ -142,7 +142,7 @@ public class EventService {
             EventDto eventDto = new EventDto();
             eventDto.setId((Long) result[0]);
             eventDto.setName((String) result[1]);
-            eventDto.setBackgroundUrl((String) result[2]);
+            eventDto.setBackgroundImage((String) result[2]);
             eventDto.setDescription((String) result[3]);
             eventDto.setSlots((Integer) result[4]);
             eventDto.setStartAt((Date) result[5]);
@@ -192,7 +192,7 @@ public class EventService {
                 .createdBy(requester)
                 .updatedBy(requester)
                 .isTicketSeller(eventDto.getIsTicketSeller())
-                .backgroundUrl(eventDto.getBackgroundUrl())
+                .backgroundImage(eventDto.getBackgroundImage())
                 .slots(eventDto.getSlots() == null ? null : Long.valueOf(eventDto.getSlots()))
                 .location(eventDto.getLocation())
                 .latitude(eventDto.getLatitude())
@@ -204,10 +204,10 @@ public class EventService {
                 .captureRequired(eventDto.getCaptureRequired())
                 .build();
 
-        String backgroundUrl = eventDto.getBackgroundUrl();
-        if (backgroundUrl != null && !backgroundUrl.isBlank()) {
-            event.setBackgroundUrl(backgroundUrl);
-            imageService.saveByUrl(backgroundUrl);
+        String background = eventDto.getBackgroundImage();
+        if (background != null && !background.isBlank()) {
+            event.setBackgroundImage(background);
+            imageService.saveByName(background);
         }
 
         Event newEvent = eventRepository.save(event);
@@ -232,7 +232,7 @@ public class EventService {
         event.setEndAt(eventDto.getEndAt());
         event.setCategories(eventDto.getCategories());
         event.setUpdatedBy(SecurityContextHolder.getContext().getAuthentication().getName());
-        event.setBackgroundUrl(eventDto.getBackgroundUrl());
+        event.setBackgroundImage(eventDto.getBackgroundImage());
         event.setSlots(eventDto.getSlots() == null ? null : Long.valueOf(eventDto.getSlots()));
         event.setLocation(eventDto.getLocation());
         event.setLatitude(eventDto.getLatitude());
@@ -243,11 +243,11 @@ public class EventService {
         event.setCheckoutQrCode(eventDto.getCheckoutQrCode());
         event.setCaptureRequired(eventDto.getCaptureRequired());
 
-        String backgroundUrl = eventDto.getBackgroundUrl();
-        if (backgroundUrl != null && !backgroundUrl.isBlank()) {
-            imageService.deleteByUrl(event.getBackgroundUrl());
-            imageService.saveByUrl(backgroundUrl);
-            event.setBackgroundUrl(backgroundUrl);
+        String background = eventDto.getBackgroundImage();
+        if (background != null && !background.isBlank()) {
+            imageService.deleteByName(event.getBackgroundImage());
+            imageService.saveByName(background);
+            event.setBackgroundImage(background);
         }
 
         Event updatedEvent = eventRepository.save(event);
@@ -323,6 +323,11 @@ public class EventService {
 
         if (isCheckin && event.getEndAt().before(now)) {
             throw new HandleException("error.event.ended", HttpStatus.BAD_REQUEST);
+        }
+
+        var endAt = new Date(event.getEndAt().getTime() + 3600000);
+        if (!isCheckin && endAt.before(now)) {
+            throw new HandleException("error.event.ended.1h", HttpStatus.BAD_REQUEST);
         }
 
         if (isCheckin) {

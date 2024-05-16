@@ -4,10 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
-import org.vinhpham.qrcheckinapi.utils.ConvertUtils;
+import org.vinhpham.qrcheckinapi.utils.Utils;
 
-import java.time.Instant;
 import java.util.Date;
 
 @Getter
@@ -52,6 +50,6 @@ public class Ticket {
     @PrePersist
     protected void onCreate() {
         createdAt = new Date();
-        qrCode = ConvertUtils.generateUUID();
+        qrCode = Utils.generateUUID();
     }
 }

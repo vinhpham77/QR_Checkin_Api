@@ -23,8 +23,8 @@ public class ImageController {
             return Failure.response("error.not.found", HttpStatus.BAD_REQUEST);
         }
 
-        String url = imageService.upload(file);
-        return new ResponseEntity<>(url, HttpStatus.OK);
+        String fileName = imageService.upload(file);
+        return new ResponseEntity<>(fileName, HttpStatus.OK);
     }
 
     @GetMapping(value = "/{imageName}")

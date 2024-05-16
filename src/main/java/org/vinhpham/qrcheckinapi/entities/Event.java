@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
-import org.vinhpham.qrcheckinapi.utils.ConvertUtils;
+import org.vinhpham.qrcheckinapi.utils.Utils;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -123,8 +123,8 @@ public class Event {
     private Set<Category> categories;
 
     @Size(max = 255)
-    @Column(name = "background_url")
-    private String backgroundUrl;
+    @Column(name = "background_image")
+    private String backgroundImage;
 
     @PrePersist
     protected void onCreate() {
@@ -132,7 +132,7 @@ public class Event {
         if (approvalRequired == null) approvalRequired = false;
         if (createdAt == null) createdAt = new Date();
         if (updatedAt == null) updatedAt = new Date();
-        checkinQrCode = ConvertUtils.generateUUID();
+        checkinQrCode = Utils.generateUUID();
         setCheckoutQrCode();
     }
 
@@ -145,8 +145,8 @@ public class Event {
     public void setCheckoutQrCode() {
         if (checkoutQrCode == null || checkoutQrCode.isBlank()) {
             this.checkoutQrCode = null;
-        } else if (!ConvertUtils.isUUID(checkoutQrCode)) {
-            this.checkoutQrCode = ConvertUtils.generateUUID();
+        } else if (!Utils.isUUID(checkoutQrCode)) {
+            this.checkoutQrCode = Utils.generateUUID();
         }
     }
 }

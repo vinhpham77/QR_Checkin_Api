@@ -40,6 +40,9 @@ public class User implements UserDetails {
     @Column(name = "status")
     private Status status;
 
+    @Column(name = "avatar")
+    private String avatar;
+
     @Basic
     @Column(name = "full_name", length = 120)
     private String fullName;

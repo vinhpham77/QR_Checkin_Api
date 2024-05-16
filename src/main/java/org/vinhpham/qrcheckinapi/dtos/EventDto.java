@@ -60,7 +60,7 @@ public class EventDto implements Serializable {
     String checkoutQrCode = null;
 
     @Size(max = 255, message = "{event.backgroundUrl.size}")
-    String backgroundUrl;
+    String backgroundImage;
 
     String checkinQrCode;
 

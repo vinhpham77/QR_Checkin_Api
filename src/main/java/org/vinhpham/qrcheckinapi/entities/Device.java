@@ -5,10 +5,9 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.vinhpham.qrcheckinapi.utils.ConvertUtils;
+import org.vinhpham.qrcheckinapi.utils.Utils;
 
 import java.util.Date;
-import java.util.UUID;
 
 @Builder
 @Getter
@@ -50,7 +49,7 @@ public class Device {
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) createdAt = new Date();
-        if (deviceId == null || deviceId.isBlank()) deviceId = ConvertUtils.generateUUID();
+        if (deviceId == null || deviceId.isBlank()) deviceId = Utils.generateUUID();
         if (deviceName == null || deviceName.isBlank()) deviceName = "Unknown";
         if (updatedAt == null) updatedAt = new Date();
     }

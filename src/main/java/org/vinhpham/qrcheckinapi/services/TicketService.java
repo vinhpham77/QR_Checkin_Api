@@ -2,9 +2,7 @@ package org.vinhpham.qrcheckinapi.services;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -15,6 +13,8 @@ import org.vinhpham.qrcheckinapi.entities.Ticket;
 import org.vinhpham.qrcheckinapi.repositories.TicketRepository;
 
 import java.util.Date;
+
+import static org.vinhpham.qrcheckinapi.utils.Utils.getCreatedAtPageable;
 
 @Service
 @RequiredArgsConstructor
@@ -104,17 +104,7 @@ public class TicketService {
     public ItemCounter<TicketDetail> getTickets(Integer page, Integer size) {
         var username = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        if (page == null || page < 1) {
-            page = 1;
-        }
-
-        page--;
-
-        if (size < 0) {
-            size = 10;
-        }
-
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Pageable pageable = getCreatedAtPageable(page, size);
 
         var tickets = ticketRepository.findByUsername(username, pageable);
         var total = tickets.getTotalElements();

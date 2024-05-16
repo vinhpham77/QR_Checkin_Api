@@ -29,4 +29,19 @@ public class AttendanceController {
         attendanceService.checkIn(id, qrImage, portraitImage, code, latitude, longitude);
         return Success.ok(null);
     }
+
+    @PostMapping("/{id}/check-out")
+    public ResponseEntity<?> checkOut(
+            @PathVariable Long id,
+            @RequestParam("qrImage") MultipartFile qrImage,
+            @RequestParam(value = "portraitImage", required = false) MultipartFile portraitImage,
+            @RequestParam("code") String code,
+            HttpServletRequest request) {
+
+        String latitude = request.getHeader(Constants.KEY_LATITUDE);
+        String longitude = request.getHeader(Constants.KEY_LONGITUDE);
+
+        attendanceService.checkOut(id, qrImage, portraitImage, code, latitude, longitude);
+        return Success.ok(null);
+    }
 }

@@ -13,7 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.vinhpham.qrcheckinapi.dtos.HandleException;
 import org.vinhpham.qrcheckinapi.entities.Image;
 import org.vinhpham.qrcheckinapi.repositories.ImageRepository;
-import org.vinhpham.qrcheckinapi.utils.ConvertUtils;
+import org.vinhpham.qrcheckinapi.utils.Utils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -104,37 +104,16 @@ public class ImageService {
     }
 
     @Transactional
-    public void saveByUrl(String url) {
-        String imageId = url.substring(url.lastIndexOf("/") + 1, url.lastIndexOf("."));
-        String extension = url.substring(url.lastIndexOf(".") + 1);
-
-        Image image = imageRepository.findByIdAndExtensionAndStatus(ConvertUtils.toLong(imageId), extension, false);
-
-        if (image != null) {
-            image.setStatus(true);
-            imageRepository.save(image);
-        }
-    }
-
-    @Transactional
     public void saveByName(String imageName) {
         String imageId = imageName.substring(0, imageName.lastIndexOf("."));
         String extension = imageName.substring(imageName.lastIndexOf(".") + 1);
 
-        Image image = imageRepository.findByIdAndExtensionAndStatus(ConvertUtils.toLong(imageId), extension, false);
+        Image image = imageRepository.findByIdAndExtensionAndStatus(Utils.toLong(imageId), extension, false);
 
         if (image != null) {
             image.setStatus(true);
             imageRepository.save(image);
         }
-    }
-
-    @Transactional
-    public void deleteByUrl(String url) {
-        String imageId = url.substring(url.lastIndexOf("/") + 1, url.lastIndexOf("."));
-        String extension = url.substring(url.lastIndexOf(".") + 1);
-
-        deleteImageByName(imageId, extension);
     }
 
     @Transactional
@@ -143,11 +122,10 @@ public class ImageService {
         String extension = imageName.substring(imageName.lastIndexOf(".") + 1);
 
         deleteImageByName(imageId, extension);
-
     }
 
     private void deleteImageByName(String imageId, String extension) {
-        Image image = imageRepository.findByIdAndExtensionAndStatus(ConvertUtils.toLong(imageId), extension, true);
+        Image image = imageRepository.findByIdAndExtensionAndStatus(Utils.toLong(imageId), extension, true);
 
         if (image != null) {
             imageRepository.delete(image);

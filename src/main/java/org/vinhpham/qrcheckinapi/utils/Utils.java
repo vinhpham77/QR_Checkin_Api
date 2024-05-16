@@ -1,9 +1,13 @@
 package org.vinhpham.qrcheckinapi.utils;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
 import java.math.BigDecimal;
 import java.util.UUID;
 
-public class ConvertUtils {
+public class Utils {
     public static Integer toInteger(String value) {
         try {
             return Integer.parseInt(value);
@@ -53,10 +57,25 @@ public class ConvertUtils {
     }
 
     public static boolean isInEventRadius(double lat1, double lon1, double lat2, double lon2, double radius) {
-        return calculateDistance(lat1, lon1, lat2, lon2) <= radius;
+        var distance = calculateDistance(lat1, lon1, lat2, lon2);
+        return distance <= radius;
     }
 
     public static double toDouble(BigDecimal value) {
         return value == null ? 0 : value.doubleValue();
+    }
+
+    public static Pageable getCreatedAtPageable(Integer page, int size) {
+        if (page == null || page < 1) {
+            page = 1;
+        }
+
+        page--;
+
+        if (size < 0) {
+            size = 10;
+        }
+
+        return PageRequest.of(page, size, Sort.by("createdAt").descending());
     }
 }
