@@ -31,4 +31,16 @@ public class TicketController {
                                         @RequestParam(required = false, name = "size", defaultValue = "10") int size) {
         return ResponseEntity.ok(ticketService.getTickets(page, size));
     }
+
+    @GetMapping("/{id}/buyers")
+    public ResponseEntity<?> getBuyers(@PathVariable Long id, @RequestParam(required = false, name = "page") Integer page,
+                                       @RequestParam(required = false, name = "size", defaultValue = "10") int size) {
+        return ResponseEntity.ok(ticketService.getBuyers(id, page, size, false));
+    }
+
+    @GetMapping("/{id}/check-ins")
+    public ResponseEntity<?> getCheckIns(@PathVariable Long id, @RequestParam(required = false, name = "page") Integer page,
+                                         @RequestParam(required = false, name = "size", defaultValue = "10") int size) {
+        return ResponseEntity.ok(ticketService.getBuyers(id, page, size, true));
+    }
 }

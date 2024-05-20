@@ -56,6 +56,7 @@ public class User implements UserDetails {
     private Boolean sex;
 
     @Basic
+    @Temporal(TemporalType.DATE)
     @Column(name = "birthdate")
     private LocalDate birthdate;
 

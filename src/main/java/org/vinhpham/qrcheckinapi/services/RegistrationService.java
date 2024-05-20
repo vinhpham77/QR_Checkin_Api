@@ -2,24 +2,29 @@ package org.vinhpham.qrcheckinapi.services;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.vinhpham.qrcheckinapi.dtos.EventDto;
 import org.vinhpham.qrcheckinapi.dtos.HandleException;
+import org.vinhpham.qrcheckinapi.dtos.ItemCounter;
+import org.vinhpham.qrcheckinapi.dtos.RegistrationUser;
 import org.vinhpham.qrcheckinapi.entities.Event;
 import org.vinhpham.qrcheckinapi.entities.Registration;
 import org.vinhpham.qrcheckinapi.repositories.RegistrationRepository;
 
 import java.util.Date;
-import java.util.List;
+
+import static org.vinhpham.qrcheckinapi.utils.Utils.getPageable;
 
 @Service
 @RequiredArgsConstructor
 public class RegistrationService {
     private final RegistrationRepository registrationRepository;
     private final EventService eventService;
+    private final UserService userService;
 
     @Transactional
     public void register(Long eventId) {
@@ -67,7 +72,7 @@ public class RegistrationService {
         return registrationRepository.findByEventIdAndUsername(eventId, username).orElse(null);
     }
 
-    public List<Registration> findByUsername(String username, Pageable pageable) {
+    public Page<Registration> findByUsername(String username, Pageable pageable) {
         return registrationRepository.findByUsername(username, pageable);
     }
 
@@ -104,6 +109,85 @@ public class RegistrationService {
                 .captureRequired(event.getCaptureRequired())
                 .backgroundImage(event.getBackgroundImage())
                 .build();
+    }
 
+    public ItemCounter<RegistrationUser> getRegistrationUsers(Long eventId, Integer page, int size, boolean isPending) {
+        Pageable pageable = getPageable(page, size, "createdAt", true);
+
+        var username = SecurityContextHolder.getContext().getAuthentication().getName();
+        var event = eventService.get(eventId);
+
+        if (event == null) {
+            throw new HandleException("error.event.not.found", HttpStatus.NOT_FOUND);
+        }
+
+        if (!event.getCreatedBy().equals(username)) {
+            throw new HandleException("error.event.user.not.permitted", HttpStatus.FORBIDDEN);
+        }
+
+        var registrations = isPending ? registrationRepository.findByEventIdAndAcceptedAtIsNull(eventId, pageable) :
+                registrationRepository.findByEventIdAndAcceptedAtIsNotNull(eventId, pageable);
+
+        var total = registrations.getTotalElements();
+        var registrationDetails = registrations.getContent().stream().map(registration -> {
+            var user = userService.findByUsername(registration.getUsername()).get();
+
+            return RegistrationUser.builder()
+                    .registrationId(registration.getId())
+                    .username(user.getUsername())
+                    .fullName(user.getFullName())
+                    .avatar(user.getAvatar())
+                    .sex(user.getSex())
+                    .email(user.getEmail())
+                    .createdAt(registration.getCreatedAt())
+                    .acceptedAt(registration.getAcceptedAt())
+                    .build();
+        }).toList();
+
+        return new ItemCounter<>(registrationDetails, total);
+
+    }
+
+    public void acceptRegistration(Long id) {
+        var username = SecurityContextHolder.getContext().getAuthentication().getName();
+        var registration = registrationRepository.findById(id).orElse(null);
+
+        if (registration == null) {
+            throw new HandleException("error.registration.not.found", HttpStatus.NOT_FOUND);
+        }
+
+        var event = registration.getEvent();
+
+        if (!event.getCreatedBy().equals(username)) {
+            throw new HandleException("error.event.user.not.permitted", HttpStatus.FORBIDDEN);
+        }
+
+        if (registration.getAcceptedAt() != null) {
+            throw new HandleException("error.registration.already.accepted", HttpStatus.BAD_REQUEST);
+        }
+
+        registration.setAcceptedAt(new Date());
+        registrationRepository.save(registration);
+    }
+
+    public void rejectRegistration(Long id) {
+        var username = SecurityContextHolder.getContext().getAuthentication().getName();
+        var registration = registrationRepository.findById(id).orElse(null);
+
+        if (registration == null) {
+            throw new HandleException("error.registration.not.found", HttpStatus.NOT_FOUND);
+        }
+
+        var event = registration.getEvent();
+
+        if (!event.getCreatedBy().equals(username)) {
+            throw new HandleException("error.event.user.not.permitted", HttpStatus.FORBIDDEN);
+        }
+
+        if (registration.getAcceptedAt() != null) {
+            throw new HandleException("error.registration.already.accepted", HttpStatus.BAD_REQUEST);
+        }
+
+        registrationRepository.delete(registration);
     }
 }

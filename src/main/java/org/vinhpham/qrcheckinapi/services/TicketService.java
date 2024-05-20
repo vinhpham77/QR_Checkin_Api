@@ -9,18 +9,21 @@ import org.springframework.stereotype.Service;
 import org.vinhpham.qrcheckinapi.dtos.HandleException;
 import org.vinhpham.qrcheckinapi.dtos.ItemCounter;
 import org.vinhpham.qrcheckinapi.dtos.TicketDetail;
+import org.vinhpham.qrcheckinapi.dtos.TicketUser;
 import org.vinhpham.qrcheckinapi.entities.Ticket;
 import org.vinhpham.qrcheckinapi.repositories.TicketRepository;
 
 import java.util.Date;
 
 import static org.vinhpham.qrcheckinapi.utils.Utils.getCreatedAtPageable;
+import static org.vinhpham.qrcheckinapi.utils.Utils.getPageable;
 
 @Service
 @RequiredArgsConstructor
 public class TicketService {
     private final TicketRepository ticketRepository;
     private final TicketTypeService ticketTypeService;
+    private final UserService userService;
     private final EventService eventService;
 
     @Transactional
@@ -128,5 +131,44 @@ public class TicketService {
 
         var ticketDetails = ticketDetailPage.stream().toList();
         return new ItemCounter<>(ticketDetails, total);
+    }
+
+    public ItemCounter<TicketUser> getBuyers(Long id, Integer page, int size, boolean isCheckIn) {
+        var event = eventService.get(id);
+
+        if (event == null) {
+            throw new HandleException("error.event.not.found", HttpStatus.NOT_FOUND);
+        }
+
+        var username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        if (!event.getCreatedBy().equals(username)) {
+            throw new HandleException("error.event.user.not.permitted", HttpStatus.FORBIDDEN);
+        }
+
+
+        Pageable pageable = isCheckIn ? getPageable(page, size, "checkInAt", false) : getPageable(page, size, "ticketType.id", true);
+
+        var tickets = isCheckIn ? ticketRepository.findByTicketTypeEventIdAndCheckInAtNotNull(id, pageable) : ticketRepository.findByTicketTypeEventId(id, pageable);
+
+        var total = tickets.getTotalElements();
+        var ticketUsers = tickets.getContent().stream().map(ticket -> {
+            var ticketType = ticket.getTicketType();
+            var user = userService.findByUsername(ticket.getUsername()).get();
+
+            return TicketUser.builder()
+                    .ticketId(ticket.getId())
+                    .username(ticket.getUsername())
+                    .fullName(user.getFullName())
+                    .sex(user.getSex())
+                    .email(user.getEmail())
+                    .avatar(user.getAvatar())
+                    .ticketType(ticketType.getName())
+                    .createdAt(ticket.getCreatedAt())
+                    .checkInAt(ticket.getCheckInAt())
+                    .build();
+        }).toList();
+
+        return new ItemCounter<>(ticketUsers, total);
     }
 }

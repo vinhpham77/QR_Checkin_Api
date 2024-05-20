@@ -10,9 +10,11 @@ public class RegistrationDetail {
     private Long id;
     private Date createdAt;
     private Date acceptedAt;
+    private Long eventId;
     private String eventName;
     private String eventCreator;
     private String eventLocation;
     private Date checkInAt;
     private Date checkOutAt;
+    private Boolean checkOutRequired;
 }

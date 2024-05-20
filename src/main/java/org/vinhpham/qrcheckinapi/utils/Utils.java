@@ -66,6 +66,10 @@ public class Utils {
     }
 
     public static Pageable getCreatedAtPageable(Integer page, int size) {
+        return getPageable(page, size, "createdAt", false);
+    }
+
+    public static Pageable getPageable(Integer page, int size, String sortField, boolean isAsc) {
         if (page == null || page < 1) {
             page = 1;
         }
@@ -76,6 +80,7 @@ public class Utils {
             size = 10;
         }
 
-        return PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Sort sort = isAsc ? Sort.by(sortField).ascending() : Sort.by(sortField).descending();
+        return PageRequest.of(page, size, sort);
     }
 }

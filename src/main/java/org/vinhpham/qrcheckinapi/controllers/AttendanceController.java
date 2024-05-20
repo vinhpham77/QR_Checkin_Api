@@ -44,4 +44,11 @@ public class AttendanceController {
         attendanceService.checkOut(id, qrImage, portraitImage, code, latitude, longitude);
         return Success.ok(null);
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getAttendances(@PathVariable Long id, @RequestParam(required = false, name = "page") Integer page,
+                                           @RequestParam(required = false, name = "size", defaultValue = "10") int size) {
+        var attendance = attendanceService.getAttendances(id, page, size);
+        return Success.ok(attendance);
+    }
 }

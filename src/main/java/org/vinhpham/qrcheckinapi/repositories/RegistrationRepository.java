@@ -1,5 +1,6 @@
 package org.vinhpham.qrcheckinapi.repositories;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,5 +17,8 @@ public interface RegistrationRepository extends JpaRepository<Registration, Long
     Optional<Registration> findByEventIdAndUsername(Long eventId, String username);
 
     @EntityGraph(attributePaths = {"event"})
-    List<Registration> findByUsername(String username, Pageable pageable);
+    Page<Registration> findByUsername(String username, Pageable pageable);
+
+    Page<Registration> findByEventIdAndAcceptedAtIsNull(Long eventId, Pageable pageable);
+    Page<Registration> findByEventIdAndAcceptedAtIsNotNull(Long eventId, Pageable pageable);
 }

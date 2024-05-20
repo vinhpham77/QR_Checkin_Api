@@ -34,4 +34,31 @@ public class RegistrationController {
         var items = attendanceService.getRegistrations(page, size);
         return Success.ok(items);
     }
+
+    @GetMapping("/{id}/pending")
+    public ResponseEntity<?> getPendingRegistrations(@PathVariable Long id, @RequestParam(required = false, name = "page") Integer page,
+                                                     @RequestParam(required = false, name = "size", defaultValue = "10") int size) {
+        var items = registrationService.getRegistrationUsers(id, page, size, true);
+        return Success.ok(items);
+    }
+
+    @GetMapping("/{id}/accepted")
+    public ResponseEntity<?> getAcceptedRegistrations(@PathVariable Long id, @RequestParam(required = false, name = "page") Integer page,
+                                                      @RequestParam(required = false, name = "size", defaultValue = "10") int size) {
+        var items = registrationService.getRegistrationUsers(id, page, size, false);
+        return Success.ok(items);
+    }
+
+    @PutMapping("/{id}/accept")
+    public ResponseEntity<?> acceptRegistration(@PathVariable Long id) {
+        registrationService.acceptRegistration(id);
+        return Success.ok(null);
+    }
+
+    @DeleteMapping("/{id}/reject")
+    public ResponseEntity<?> rejectRegistration(@PathVariable Long id) {
+        registrationService.rejectRegistration(id);
+        return Success.ok(null);
+    }
+
 }

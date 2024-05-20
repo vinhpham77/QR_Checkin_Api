@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.vinhpham.qrcheckinapi.dtos.AttendanceUser;
 import org.vinhpham.qrcheckinapi.dtos.HandleException;
 import org.vinhpham.qrcheckinapi.dtos.ItemCounter;
 import org.vinhpham.qrcheckinapi.dtos.RegistrationDetail;
@@ -27,6 +28,7 @@ public class AttendanceService {
     private final EventService eventService;
     private final ImageService imageService;
     private final RegistrationService registrationService;
+    private final UserService userService;
 
     public Attendance findByRegistrationId(Long registrationId) {
         return attendanceRepository.findByRegistrationId(registrationId);
@@ -38,14 +40,16 @@ public class AttendanceService {
         var username = SecurityContextHolder.getContext().getAuthentication().getName();
         var registrations = registrationService.findByUsername(username, pageable);
 
-        var total = registrations.size();
+        var total = registrations.getTotalElements();
         var registrationDetails = registrations.stream().map(registration -> {
             var event = registration.getEvent();
             var attendance = findByRegistrationId(registration.getId());
 
             return RegistrationDetail.builder()
                     .id(registration.getId())
+                    .eventId(event.getId())
                     .eventName(event.getName())
+                    .checkOutRequired(event.getCheckoutQrCode() != null)
                     .checkInAt(attendance != null ? attendance.getCheckInAt() : null)
                     .checkOutAt(attendance != null ? attendance.getCheckOutAt() : null)
                     .createdAt(registration.getCreatedAt())
@@ -207,5 +211,44 @@ public class AttendanceService {
         if (portraitImageName != null) {
             imageService.saveByName(portraitImageName);
         }
+    }
+
+    public ItemCounter<AttendanceUser> getAttendances(Long eventId, Integer page, int size) {
+        Pageable pageable = getPageable(page, size, "checkInAt", false);
+
+        var event = eventService.get(eventId);
+
+        var username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        if (!event.getCreatedBy().equals(username)) {
+            throw new HandleException("error.event.user.not.permitted", HttpStatus.FORBIDDEN);
+        }
+
+        var attendances = attendanceRepository.findByEventId(eventId, pageable);
+
+        var total = attendances.getTotalElements();
+
+        var list = attendances.getContent().stream().map(attendance -> {
+            var user = userService.findByUsername(attendance.getUsername()).get();
+
+            return AttendanceUser.builder()
+                    .attendanceId(attendance.getId())
+                    .username(attendance.getUsername())
+                    .isCheckOutRequired(event.getCheckoutQrCode() != null)
+                    .isCaptureRequired(event.getCaptureRequired())
+                    .checkInAt(attendance.getCheckInAt())
+                    .checkOutAt(attendance.getCheckOutAt())
+                    .checkInImg(attendance.getCheckInImg())
+                    .checkOutImg(attendance.getCheckOutImg())
+                    .qrCheckInImg(attendance.getQrCheckInImg())
+                    .qrCheckOutImg(attendance.getQrCheckOutImg())
+                    .fullName(user.getFullName())
+                    .sex(user.getSex())
+                    .avatar(user.getAvatar())
+                    .email(user.getEmail())
+                    .build();
+        }).toList();
+
+        return new ItemCounter<>(list, total);
     }
 }

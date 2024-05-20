@@ -116,7 +116,6 @@ public class ImageService {
         }
     }
 
-    @Transactional
     public void deleteByName(String imageName) {
         String imageId = imageName.substring(0, imageName.lastIndexOf("."));
         String extension = imageName.substring(imageName.lastIndexOf(".") + 1);
@@ -133,7 +132,7 @@ public class ImageService {
 
             try {
                 Files.delete(pathImage);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 LOGGER.error("Exception", e);
             }
         }

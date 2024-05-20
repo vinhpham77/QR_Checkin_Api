@@ -36,4 +36,8 @@ public class UserService {
     public Optional<List<User>> getAllUser() {
         return Optional.of(userRepository.findAll());
     }
+
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
 }
