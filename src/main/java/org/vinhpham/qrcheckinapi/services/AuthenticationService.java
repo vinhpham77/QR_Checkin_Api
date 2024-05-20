@@ -37,6 +37,7 @@ public class AuthenticationService {
     public User register(UserDto request) {
         String username = request.getUsername();
         String email = request.getEmail();
+        String idNo = request.getIdNo();
 
         Optional<User> userOptional = userRepository.findById(username);
 
@@ -50,12 +51,19 @@ public class AuthenticationService {
             throw HandleException.bad("error.email.exists");
         }
 
+        Optional<User> idNoOptional = userRepository.findByIdNo(idNo);
+
+        if (idNoOptional.isPresent()) {
+            throw HandleException.bad("error.idNo.exists");
+        }
+
         String hashPassword = passwordEncoder.encode(request.getPassword());
 
         User user = User.builder()
                 .username(username)
                 .hashPassword(hashPassword)
-                .email(request.getEmail())
+                .email(email)
+                .idNo(idNo)
                 .build();
 
         return userRepository.save(user);

@@ -27,4 +27,8 @@ public class UserDto {
     @Length(max = 50, message = "Email không được quá 50 ký tự")
     private String email;
 
+    @NotBlank(message = "CMND/CCCD không được để trống")
+    @Pattern(regexp = "^[0-9]{9,12}$", message = "CMND/CCCD phải có từ 9 đến 12 chữ số")
+    private String idNo;
+
 }

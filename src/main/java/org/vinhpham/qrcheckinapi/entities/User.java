@@ -61,6 +61,10 @@ public class User implements UserDetails {
     private LocalDate birthdate;
 
     @Basic
+    @Column(name = "id_no", unique = true)
+    private String idNo;
+
+    @Basic
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created_at")
     private Date createdAt;
