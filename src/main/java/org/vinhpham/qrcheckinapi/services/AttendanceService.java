@@ -49,7 +49,7 @@ public class AttendanceService {
                     .id(registration.getId())
                     .eventId(event.getId())
                     .eventName(event.getName())
-                    .checkOutRequired(event.getCheckoutQrCode() != null)
+                    .checkOutRequired(event.getCheckoutSecretKey() != null)
                     .checkInAt(attendance != null ? attendance.getCheckInAt() : null)
                     .checkOutAt(attendance != null ? attendance.getCheckOutAt() : null)
                     .createdAt(registration.getCreatedAt())
@@ -60,7 +60,6 @@ public class AttendanceService {
         }).toList();
 
         return new ItemCounter<>(registrationDetails, total);
-
     }
 
     @Transactional
@@ -72,10 +71,10 @@ public class AttendanceService {
         }
 
         var username = SecurityContextHolder.getContext().getAuthentication().getName();
-        jwtService.verifyQrToken(code, event.getId(), event.getCheckinQrCode());
+        jwtService.verifyQrToken(code, event.getId(), event.getCheckinSecretKey());
         var slots = event.getSlots();
         var now = new Date();
-        Registration registration;
+        Registration registration = null;
 
         if (event.getEndAt().before(now)) {
             throw new HandleException("error.event.ended", HttpStatus.BAD_REQUEST);
@@ -83,9 +82,9 @@ public class AttendanceService {
 
         validateTimeAndLocation(portraitImage, latitude, longitude, event, now);
 
-        if (event.getRegisRequired()) {
-            registration = registrationService.findByEventIdAndUsername(id, username);
+        registration = registrationService.findByEventIdAndUsername(id, username);
 
+        if (event.getRegisRequired()) {
             if (registration == null) {
                 throw new HandleException("error.not.registered", HttpStatus.BAD_REQUEST);
             } else if (registration.getAcceptedAt() == null) {
@@ -116,7 +115,7 @@ public class AttendanceService {
 
             attendance = Attendance.builder()
                     .checkInImg(portraitImageName)
-                    .registrationId(null)
+                    .registrationId(registration != null ? registration.getId() : null)
                     .qrCheckInImg(qrImageName)
                     .username(username)
                     .eventId(event.getId())
@@ -125,7 +124,7 @@ public class AttendanceService {
         } else {
             oldPortraitImageName = attendance.getCheckInImg();
             oldQrImageName = attendance.getQrCheckInImg();
-
+            attendance.setRegistrationId(registration != null ? registration.getId() : null);
             attendance.setCheckInImg(portraitImageName);
             attendance.setQrCheckInImg(qrImageName);
             attendance.setCheckInAt(now);
@@ -175,7 +174,7 @@ public class AttendanceService {
             throw new HandleException("error.event.not.found", HttpStatus.NOT_FOUND);
         }
 
-        jwtService.verifyQrToken(code, event.getId(), event.getCheckoutQrCode());
+        jwtService.verifyQrToken(code, event.getId(), event.getCheckoutSecretKey());
         var now = new Date();
         var username = SecurityContextHolder.getContext().getAuthentication().getName();
         var attendance = attendanceRepository.findByUsernameAndEventId(username, id);
@@ -234,7 +233,7 @@ public class AttendanceService {
             return AttendanceUser.builder()
                     .attendanceId(attendance.getId())
                     .username(attendance.getUsername())
-                    .isCheckOutRequired(event.getCheckoutQrCode() != null)
+                    .isCheckOutRequired(event.getCheckoutSecretKey() != null)
                     .isCaptureRequired(event.getCaptureRequired())
                     .checkInAt(attendance.getCheckInAt())
                     .checkOutAt(attendance.getCheckOutAt())

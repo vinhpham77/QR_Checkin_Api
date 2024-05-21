@@ -154,8 +154,8 @@ public class EventService {
             eventDto.setRegisRequired((Boolean) result[11]);
             eventDto.setApprovalRequired((Boolean) result[12]);
             eventDto.setCaptureRequired((Boolean) result[13]);
-            eventDto.setCheckinQrCode((String) result[14]);
-            eventDto.setCheckoutQrCode((String) result[15]);
+            eventDto.setCheckinSecretKey((String) result[14]);
+            eventDto.setCheckoutSecretKey((String) result[15]);
             eventDto.setCreatedAt((Date) result[16]);
             eventDto.setCreatedBy((String) result[17]);
             eventDto.setUpdatedAt((Date) result[18]);
@@ -200,7 +200,7 @@ public class EventService {
                 .radius(eventDto.getRadius())
                 .approvalRequired(eventDto.getApprovalRequired())
                 .regisRequired(eventDto.getRegisRequired())
-                .checkoutQrCode(eventDto.getCheckoutQrCode())
+                .checkoutSecretKey(eventDto.getCheckoutSecretKey())
                 .captureRequired(eventDto.getCaptureRequired())
                 .build();
 
@@ -220,7 +220,7 @@ public class EventService {
     @Transactional
     public Event update(Long id, EventDto eventDto) {
         Event event = get(id);
-
+        String oldImage = event.getBackgroundImage();
         String requester = SecurityContextHolder.getContext().getAuthentication().getName();
         if (!requester.equals(event.getCreatedBy())) {
             throw new HandleException("error.event.not.authorized", HttpStatus.FORBIDDEN);
@@ -232,7 +232,6 @@ public class EventService {
         event.setEndAt(eventDto.getEndAt());
         event.setCategories(eventDto.getCategories());
         event.setUpdatedBy(SecurityContextHolder.getContext().getAuthentication().getName());
-        event.setBackgroundImage(eventDto.getBackgroundImage());
         event.setSlots(eventDto.getSlots() == null ? null : Long.valueOf(eventDto.getSlots()));
         event.setLocation(eventDto.getLocation());
         event.setLatitude(eventDto.getLatitude());
@@ -240,11 +239,11 @@ public class EventService {
         event.setRadius(eventDto.getRadius());
         event.setApprovalRequired(eventDto.getApprovalRequired());
         event.setRegisRequired(eventDto.getRegisRequired());
-        event.setCheckoutQrCode(eventDto.getCheckoutQrCode());
+        event.setCheckoutSecretKey(eventDto.getCheckoutSecretKey());
         event.setCaptureRequired(eventDto.getCaptureRequired());
 
         String background = eventDto.getBackgroundImage();
-        if (background != null && !background.isBlank()) {
+        if (oldImage != null && !oldImage.equals(eventDto.getBackgroundImage())) {
             imageService.deleteByName(event.getBackgroundImage());
             imageService.saveByName(background);
             event.setBackgroundImage(background);
@@ -331,9 +330,9 @@ public class EventService {
         }
 
         if (isCheckin) {
-            return jwtService.generateQrToken(eventId, event.getCheckinQrCode());
+            return jwtService.generateQrToken(eventId, event.getCheckinSecretKey());
         } else {
-            return jwtService.generateQrToken(eventId, event.getCheckoutQrCode());
+            return jwtService.generateQrToken(eventId, event.getCheckoutSecretKey());
         }
     }
 }

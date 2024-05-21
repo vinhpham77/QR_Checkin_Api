@@ -10,7 +10,7 @@ spring.jpa.show-sql=true
 
 spring.servlet.multipart.max-file-size=5MB
 spring.servlet.multipart.max-request-size=15MB
-uploads.path=src/main/resources/static/images
+uploads.path=src/main/resources/static/images/
 upload.extensions.allowed=jpg,jpeg,png,gif,heic,webp
 
 spring.web.locale=vi_VN
@@ -27,5 +27,5 @@ token.refresh.secret.key=TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWF
 # Refresh token expiration is 7 days
 token.refresh.expirationms=604800000
 
-event.search.fields=name,description,location,createdBy
-event.sort.fields=createdAt,updatedAt,location
+event.search.fields=name,description,location,created_by
+event.sort.fields=name,created_at,updated_at,distance

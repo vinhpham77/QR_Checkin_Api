@@ -108,12 +108,12 @@ public class Event {
 
     @Size(max = 64)
     @NotNull
-    @Column(name = "checkin_qr_code", nullable = false, length = 64, unique = true)
-    private String checkinQrCode;
+    @Column(name = "checkin_secret_key", nullable = false, length = 64, unique = true)
+    private String checkinSecretKey;
 
     @Size(max = 64)
-    @Column(name = "checkout_qr_code", length = 64, unique = true)
-    private String checkoutQrCode;
+    @Column(name = "checkout_secret_key", length = 64, unique = true)
+    private String checkoutSecretKey;
 
     @ManyToMany
     @JoinTable(
@@ -132,7 +132,7 @@ public class Event {
         if (approvalRequired == null) approvalRequired = false;
         if (createdAt == null) createdAt = new Date();
         if (updatedAt == null) updatedAt = new Date();
-        checkinQrCode = Utils.generateUUID();
+        checkinSecretKey = Utils.generateUUID();
         setCheckoutQrCode();
     }
 
@@ -143,10 +143,10 @@ public class Event {
     }
 
     public void setCheckoutQrCode() {
-        if (checkoutQrCode == null || checkoutQrCode.isBlank()) {
-            this.checkoutQrCode = null;
-        } else if (!Utils.isUUID(checkoutQrCode)) {
-            this.checkoutQrCode = Utils.generateUUID();
+        if (checkoutSecretKey == null || checkoutSecretKey.isBlank()) {
+            this.checkoutSecretKey = null;
+        } else if (!Utils.isUUID(checkoutSecretKey)) {
+            this.checkoutSecretKey = Utils.generateUUID();
         }
     }
 }
