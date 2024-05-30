@@ -61,8 +61,6 @@ public class TicketService {
 
     @Transactional
     public void checkIn(String code, Long eventId) {
-        var ticket = ticketRepository.findByQrCode(code);
-
         var event = eventService.get(eventId);
 
         if (event == null) {
@@ -75,13 +73,17 @@ public class TicketService {
             throw new HandleException("error.event.user.not.permitted", HttpStatus.FORBIDDEN);
         }
 
+        var ticket = ticketRepository.findByQrCode(code);
+
+        if (ticket == null) {
+            throw new HandleException("error.ticket.not.found", HttpStatus.NOT_FOUND);
+        }
+
         var ticketType = ticket.getTicketType();
 
         if (ticketType == null) {
             throw new HandleException("error.ticket.type.not.found", HttpStatus.NOT_FOUND);
-        }
-
-        if (!ticketType.getEventId().equals(eventId)) {
+        } else if (!ticketType.getEventId().equals(eventId)) {
             throw new HandleException("error.ticket.event.not.match", HttpStatus.BAD_REQUEST, event.getName());
         }
 
@@ -89,18 +91,13 @@ public class TicketService {
 
         if (event.getStartAt().after(now)) {
             throw new HandleException("error.event.not.started", HttpStatus.BAD_REQUEST);
-        }
-
-        if (event.getEndAt().before(now)) {
+        } else if (event.getEndAt().before(now)) {
             throw new HandleException("error.event.ended", HttpStatus.BAD_REQUEST);
-        }
-
-        if (ticket.getCheckInAt() != null) {
+        } else if (ticket.getCheckInAt() != null) {
             throw new HandleException("error.ticket.already.checked.in", HttpStatus.BAD_REQUEST);
         }
 
         ticket.setCheckInAt(now);
-
         ticketRepository.save(ticket);
     }
 

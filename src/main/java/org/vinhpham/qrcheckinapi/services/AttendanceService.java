@@ -81,7 +81,6 @@ public class AttendanceService {
         }
 
         validateTimeAndLocation(portraitImage, latitude, longitude, event, now);
-
         registration = registrationService.findByEventIdAndUsername(id, username);
 
         if (event.getRegisRequired()) {

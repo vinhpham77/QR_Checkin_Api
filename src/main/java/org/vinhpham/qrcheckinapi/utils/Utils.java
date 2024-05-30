@@ -37,6 +37,11 @@ public class Utils {
         }
     }
 
+    public static boolean isInEventRadius(double lat1, double lon1, double lat2, double lon2, double radius) {
+        var distance = calculateDistance(lat1, lon1, lat2, lon2);
+        return distance <= radius;
+    }
+
     public static double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
         final int EARTH_RADIUS = 6371; // Approx Earth radius in KM
 
@@ -54,11 +59,6 @@ public class Utils {
 
     public static double haversin(double val) {
         return Math.pow(Math.sin(val / 2), 2);
-    }
-
-    public static boolean isInEventRadius(double lat1, double lon1, double lat2, double lon2, double radius) {
-        var distance = calculateDistance(lat1, lon1, lat2, lon2);
-        return distance <= radius;
     }
 
     public static double toDouble(BigDecimal value) {

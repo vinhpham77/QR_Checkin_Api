@@ -110,6 +110,7 @@ public class EventService {
                 searchQueryString.append(" ORDER BY events.").append(sortField).append(" ").append(direction);
             }
         }
+
         String countString = searchQueryString.toString();
         searchQueryString.append(" LIMIT :limit OFFSET :offset");
 
@@ -139,35 +140,40 @@ public class EventService {
         List<EventDto> events = new ArrayList<>();
 
         for (Object[] result : results) {
-            EventDto eventDto = new EventDto();
-            eventDto.setId((Long) result[0]);
-            eventDto.setName((String) result[1]);
-            eventDto.setBackgroundImage((String) result[2]);
-            eventDto.setDescription((String) result[3]);
-            eventDto.setSlots((Integer) result[4]);
-            eventDto.setStartAt((Date) result[5]);
-            eventDto.setEndAt((Date) result[6]);
-            eventDto.setLocation((String) result[7]);
-            eventDto.setLatitude((BigDecimal) result[8]);
-            eventDto.setLongitude((BigDecimal) result[9]);
-            eventDto.setRadius((Double) result[10]);
-            eventDto.setRegisRequired((Boolean) result[11]);
-            eventDto.setApprovalRequired((Boolean) result[12]);
-            eventDto.setCaptureRequired((Boolean) result[13]);
-            eventDto.setCheckinSecretKey((String) result[14]);
-            eventDto.setCheckoutSecretKey((String) result[15]);
-            eventDto.setCreatedAt((Date) result[16]);
-            eventDto.setCreatedBy((String) result[17]);
-            eventDto.setUpdatedAt((Date) result[18]);
-            eventDto.setUpdatedBy((String) result[19]);
-            eventDto.setIsTicketSeller((Boolean) result[22]);
-            eventDto.setDistance((Double) result[23]);
+            EventDto eventDto = getEventDto(result);
             events.add(eventDto);
         }
 
-        Long counter = (long) countQuery.getResultList().size();
+        long counter = countQuery.getResultList().size();
 
         return new ItemCounter<>(events, counter);
+    }
+
+    private static EventDto getEventDto(Object[] result) {
+        EventDto eventDto = new EventDto();
+        eventDto.setId((Long) result[0]);
+        eventDto.setName((String) result[1]);
+        eventDto.setBackgroundImage((String) result[2]);
+        eventDto.setDescription((String) result[3]);
+        eventDto.setSlots((Integer) result[4]);
+        eventDto.setStartAt((Date) result[5]);
+        eventDto.setEndAt((Date) result[6]);
+        eventDto.setLocation((String) result[7]);
+        eventDto.setLatitude((BigDecimal) result[8]);
+        eventDto.setLongitude((BigDecimal) result[9]);
+        eventDto.setRadius((Double) result[10]);
+        eventDto.setRegisRequired((Boolean) result[11]);
+        eventDto.setApprovalRequired((Boolean) result[12]);
+        eventDto.setCaptureRequired((Boolean) result[13]);
+        eventDto.setCheckinSecretKey((String) result[14]);
+        eventDto.setCheckoutSecretKey((String) result[15]);
+        eventDto.setCreatedAt((Date) result[16]);
+        eventDto.setCreatedBy((String) result[17]);
+        eventDto.setUpdatedAt((Date) result[18]);
+        eventDto.setUpdatedBy((String) result[19]);
+        eventDto.setIsTicketSeller((Boolean) result[22]);
+        eventDto.setDistance((Double) result[23]);
+        return eventDto;
     }
 
     @Transactional
