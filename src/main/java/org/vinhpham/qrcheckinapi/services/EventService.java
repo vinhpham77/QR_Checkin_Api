@@ -97,7 +97,11 @@ public class EventService {
         if (keyword != null && !keyword.isBlank()) {
             searchQueryString.append(" AND (FALSE");
             for (String field : fields) {
-                searchQueryString.append(" OR events.").append(field).append(" LIKE :keyword");
+                if (field.equals("created_by")) {
+                    searchQueryString.append(" OR CONVERT(events.").append(field).append(" USING utf8mb4) LIKE :keyword");
+                } else {
+                    searchQueryString.append(" OR events.").append(field).append(" LIKE :keyword");
+                }
             }
             searchQueryString.append(")");
         }
